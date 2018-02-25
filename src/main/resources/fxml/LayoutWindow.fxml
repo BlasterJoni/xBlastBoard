@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="blasterjoni.blastboard.LayoutWindowController">
+   <bottom>
+      <ButtonBar prefHeight="25.0" BorderPane.alignment="CENTER">
+        <buttons>
+          <Button mnemonicParsing="false" text="Ok" />
+            <Button mnemonicParsing="false" text="Cancel" />
+        </buttons>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin>
+      </ButtonBar>
+   </bottom>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0">
+               <right>
+                  <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+                     <children>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Preview" />
+                        <ComboBox fx:id="previewComboBox" minWidth="-Infinity" prefWidth="200.0" />
+                     </children>
+                     <BorderPane.margin>
+                        <Insets right="10.0" />
+                     </BorderPane.margin>
+                  </VBox>
+               </right>
+               <center>
+                  <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="77.0" />
+                      <ColumnConstraints hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="235.0" />
+                        <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="30.0" />
+                        <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="30.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Label text="Id" />
+                        <Label text="Text" GridPane.rowIndex="1" />
+                        <Label text="Icon" GridPane.rowIndex="2" />
+                        <Label text="Background" GridPane.rowIndex="3" />
+                        <TextField fx:id="layoutTextTextField" prefWidth="244.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <TextField fx:id="layoutIconTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <TextField fx:id="layoutBackgroundTextField" editable="false" prefWidth="237.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <TextField fx:id="layoutIdTextField" GridPane.columnIndex="1" />
+                        <Button fx:id="layoutIconPathButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#layoutIconPathButtonClicked" prefHeight="25.0" prefWidth="25.0" text="..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+                        <Button fx:id="layoutBackgroundPathButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#layoutBackgroundPathButtonClicked" prefHeight="25.0" prefWidth="25.0" text="..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                        <ColorPicker fx:id="layoutTextColorPicker" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                        <ColorPicker fx:id="layoutBackgroundColorPicker" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                     </children>
+                     <BorderPane.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </BorderPane.margin>
+                  </GridPane>
+               </center>
+            </BorderPane>
+            <Accordion maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+              <panes>
+                <TitledPane animated="false" text="Default Button Settings">
+                     <content>
+                        <BorderPane>
+                           <right>
+                              <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Preview" />
+                                    <Button fx:id="previewButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="75.0" prefWidth="75.0" />
+                                 </children>
+                                 <BorderPane.margin>
+                                    <Insets />
+                                 </BorderPane.margin>
+                              </VBox>
+                           </right>
+                           <center>
+                              <GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+                                <columnConstraints>
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="116.0" minWidth="10.0" prefWidth="79.0" />
+                                  <ColumnConstraints hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="345.0" />
+                                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="30.0" />
+                                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="30.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <Label text="Sound" GridPane.rowIndex="3" />
+                                    <Label text="Text" />
+                                    <Label text="Icon" GridPane.rowIndex="1" />
+                                    <Label text="Background" GridPane.rowIndex="2" />
+                                    <TextField fx:id="buttonSoundTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <TextField fx:id="buttonTextTextField" prefWidth="335.0" GridPane.columnIndex="1" />
+                                    <TextField fx:id="buttonIconTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="buttonBackgroundTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Button fx:id="buttonIconPathButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                                    <Button fx:id="buttonBackgroundPathButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+                                    <Button fx:id="buttonSoundPathButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="..." GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                                    <ColorPicker fx:id="buttonTextColorPicker" GridPane.columnIndex="3" />
+                                    <ColorPicker fx:id="buttonBackgroundColorPicker" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                 </children>
+                                 <BorderPane.margin>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </BorderPane.margin>
+                              </GridPane>
+                           </center>
+                        </BorderPane>
+                     </content>
+                  </TitledPane>
+              </panes>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+            </Accordion>
+         </children>
+      </VBox>
+   </center>
+</BorderPane>
