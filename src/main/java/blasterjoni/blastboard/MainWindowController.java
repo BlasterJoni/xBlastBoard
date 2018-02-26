@@ -40,9 +40,10 @@ public class MainWindowController{
     @FXML
     private Slider outputSlider;
             
-    private final String home = System.getProperty("user.home");
-    private final String BlastBoardDir = home + "/.BlastBoard";
-    private final File settingsFile = new File(BlastBoardDir + "/settings.ini");
+    public final String home = System.getProperty("user.home");
+    public final String BlastBoardDir = home + "/.BlastBoard";
+    public final String layoutsDir = BlastBoardDir + "/Layouts";
+    public final File settingsFile = new File(BlastBoardDir + "/settings.ini");
     
     public Stage stage;
     public Ini settings;
@@ -157,7 +158,7 @@ public class MainWindowController{
         stageLayout.setMinWidth(650);
         stageLayout.setMinHeight(450);
         stageLayout.initModality(Modality.APPLICATION_MODAL);
-        controller.init(this, stageLayout);
+        controller.init(this, stageLayout, "");
         
         stageLayout.showAndWait();
     }
