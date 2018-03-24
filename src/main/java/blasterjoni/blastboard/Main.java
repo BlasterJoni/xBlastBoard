@@ -1,47 +1,33 @@
-  package blasterjoni.blastboard;
+package blasterjoni.blastboard;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import org.ini4j.Ini;
 
 public class Main extends Application {
 
     public static void main(String[] args){
         // Before anything check if files exist, if not create them.
         String home = System.getProperty("user.home");
-        String BlastBoardDir = home + "/.BlastBoard";
-        File layoutsDir = new File(BlastBoardDir + "/Layouts");
-        File settingsFile = new File(BlastBoardDir + "/settings.ini");
-        if(!settingsFile.exists()){
-            settingsFile.getParentFile().mkdirs();
+        String BlastBoardDirPath = home + "/.BlastBoard";
+        File BlastBoardDir = new File(BlastBoardDirPath);
+        if(!BlastBoardDir.exists()){
+            BlastBoardDir.mkdirs();
+            BBFiles.createNewSettings();
+            BBFiles.createNewLayoutList();
             
-            Ini settings = new Ini();
-            
-            settings.put("Audio", "firstOutput", "");
-            settings.put("Audio", "secondOutput", "");
-            
-            settings.put("Main", "local", true);
-            settings.put("Main", "localVOL", 100);
-            settings.put("Main", "link", true);
-            settings.put("Main", "output", true);
-            settings.put("Main", "outputVOL", 100);
-            
-            try{
-                settings.store(settingsFile);
-            }
-            catch(IOException ioe){
-                ioe.printStackTrace();
-            }
-        }
-        if(!layoutsDir.exists()){
-            layoutsDir.mkdirs();
+            BBFiles.saveLayout("Default", "Default Layout", Color.BLACK, "", "", Color.WHITE, "Button", Color.BLACK, "", "", Color.WHITE);
+            BBFiles.createNewButtonList("Default");
+            List<String> layoutList = BBFiles.getLayoutList();
+            layoutList.add("Default");
+            BBFiles.saveLayoutList(layoutList);
         }
         // Everywhere forward these files are assumed to exist.
         Application.launch(args);

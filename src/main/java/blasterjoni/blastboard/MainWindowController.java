@@ -1,20 +1,45 @@
 package blasterjoni.blastboard;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.ini4j.Ini;
 
 /*
@@ -29,6 +54,7 @@ import org.ini4j.Ini;
  */
 public class MainWindowController{
 
+    // <editor-fold defaultstate="collapsed" desc=" Fields for fxml injection ">
     @FXML
     private CheckBox localCheckBox;
     @FXML
@@ -39,11 +65,13 @@ public class MainWindowController{
     private CheckBox outputCheckBox;
     @FXML
     private Slider outputSlider;
-            
-    public final String home = System.getProperty("user.home");
-    public final String BlastBoardDir = home + "/.BlastBoard";
-    public final String layoutsDir = BlastBoardDir + "/Layouts";
-    public final File settingsFile = new File(BlastBoardDir + "/settings.ini");
+    @FXML
+    private ComboBox layoutComboBox;
+    
+    @FXML
+    private FlowPane buttonsFlowPane;
+    // </editor-fold>
+    private Boolean buttonContextMenuActivated = false;
     
     public Stage stage;
     public Ini settings;
@@ -52,12 +80,9 @@ public class MainWindowController{
     public void init(Stage stage){
         //Setting default values
         this.stage = stage;
-        try{
-            this.settings = new Ini(new FileReader(settingsFile));
-        }
-        catch(IOException ioe){
-            ioe.printStackTrace();
-        }
+        
+        this.settings = BBFiles.loadSettings();
+        
         localCheckBox.setSelected(settings.get("Main", "local", boolean.class));
         localSlider.setValue(settings.get("Main", "localVOL", double.class));
         linkToggleButton.setSelected(settings.get("Main", "link", boolean.class));
@@ -65,17 +90,17 @@ public class MainWindowController{
         outputSlider.setValue(settings.get("Main", "outputVOL", double.class));
         ae = new AudioEngine(settings.get("Audio", "firstOutput"), settings.get("Audio", "secondOutput"), settings.get("Main", "localVOL", double.class), settings.get("Main", "outputVOL", double.class));
         
-        //Volume changing events
+        // <editor-fold defaultstate="collapsed" desc=" Volume Listeners ">
         localSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-                if(linkToggleButton.isSelected()){
-                   outputSlider.setValue(localSlider.getValue());
-                   if(outputCheckBox.isSelected()){
-                       ae.setSecondVolume(localSlider.getValue());
-                   }
+                if (linkToggleButton.isSelected()) {
+                    outputSlider.setValue(localSlider.getValue());
+                    if (outputCheckBox.isSelected()) {
+                        ae.setSecondVolume(localSlider.getValue());
+                    }
                 }
-                if(localCheckBox.isSelected()){
+                if (localCheckBox.isSelected()) {
                     ae.setFirstVolume(localSlider.getValue());
                 }
             }
@@ -84,17 +109,230 @@ public class MainWindowController{
         outputSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-                if(linkToggleButton.isSelected()){
-                   localSlider.setValue(outputSlider.getValue());
-                   if(localCheckBox.isSelected()){
-                       ae.setFirstVolume(outputSlider.getValue());
-                   }
+                if (linkToggleButton.isSelected()) {
+                    localSlider.setValue(outputSlider.getValue());
+                    if (localCheckBox.isSelected()) {
+                        ae.setFirstVolume(outputSlider.getValue());
+                    }
                 }
-                if(outputCheckBox.isSelected()){
+                if (outputCheckBox.isSelected()) {
                     ae.setSecondVolume(outputSlider.getValue());
                 }
             }
         });
+
+// </editor-fold>
+
+        // <editor-fold defaultstate="collapsed" desc=" FlowPaneContextMenu ">
+        ContextMenu buttonContextMenu = new ContextMenu();
+        MenuItem addButton = new MenuItem("Add Button");
+        addButton.setOnAction((ActionEvent e) -> {
+            try {
+                addButtonContexMenuItemClicked();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+        MenuItem editButton = new MenuItem("Edit Button");
+        editButton.setDisable(true);
+        MenuItem removeButton = new MenuItem("Remove Button");
+        removeButton.setDisable(true);
+        buttonContextMenu.getItems().addAll(addButton, new SeparatorMenuItem(), editButton, removeButton);
+
+        buttonsFlowPane.setOnContextMenuRequested(e -> {
+            if (buttonContextMenu.isShowing()) {
+                //Gotta hide it first or it'll look weird when we open it again
+                buttonContextMenu.hide();
+            }
+            if(!buttonContextMenuActivated){
+               buttonContextMenu.show(buttonsFlowPane, e.getScreenX(), e.getScreenY()); 
+            }
+            buttonContextMenuActivated = false;
+        });
+        buttonsFlowPane.setOnMouseClicked(e -> {
+            if (buttonContextMenu.isShowing()) {
+                buttonContextMenu.hide();
+            }
+        });
+        // </editor-fold>
+
+        final Callback<ListView<String>, ListCell<String>> cellFactory;
+        cellFactory = new Callback<ListView<String>, ListCell<String>>() {
+            @Override public ListCell<String> call(ListView<String> p) {
+                return new ListCell<String>() {
+                    private final ImageView rectangle;
+                    { 
+                        setContentDisplay(ContentDisplay.LEFT);
+                        rectangle = new ImageView();
+                        rectangle.setPreserveRatio(true);
+                        rectangle.setFitWidth(16);
+                        rectangle.setFitHeight(16);
+                    }
+                    
+                    @Override protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        
+                        if (item == null || empty) {
+                            setText(null);
+                            setTextFill(null);
+                            setGraphic(null);
+                            setStyle(null);
+                        } else {
+                            LayoutProperties layout = BBFiles.getLayoutProperties(item);
+                            
+                            setText(layout.text);
+                            setTextFill(layout.textColor);
+                                
+                            if (!layout.hasIcon) {
+                                rectangle.setImage(null);
+                            } else {
+                                try (FileInputStream fis = new FileInputStream(layout.iconPath)){
+                                    rectangle.setImage(new Image(fis));
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    rectangle.setImage(null);
+                                }
+                            }
+                            setGraphic(rectangle);
+                            
+                            BackgroundFill[] fills = {new BackgroundFill(layout.backgroundColor, CornerRadii.EMPTY, Insets.EMPTY)};
+                            BackgroundImage[] images = new BackgroundImage[1];
+                            if (!layout.hasBackgroundImage) {
+                                images[0] = null;
+                            } else {
+                                try (FileInputStream fis = new FileInputStream(layout.backgroundImagePath)){
+                                    Image image = new Image(fis);
+                                    images[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    images[0] = null;
+                                }
+                            }
+                            setBackground(new Background(fills, images));
+                        }
+                    }
+                };
+            }
+        };        
+        layoutComboBox.setCellFactory(cellFactory);
+        layoutComboBox.setButtonCell(cellFactory.call(null));
+        
+        layoutComboBox.setOnContextMenuRequested(e->{
+            MenuItem removeItem = layoutComboBox.getContextMenu().getItems().get(3);
+            if(layoutComboBox.getItems().size() == 1){
+                removeItem.setDisable(true);
+            }else{
+                removeItem.setDisable(false);
+            }
+        });
+        
+        updateLayouts();
+        if(settings.get("Main", "currentLayout").equals("")){
+            layoutComboBox.setValue(layoutComboBox.getItems().get(0)); 
+        }else{
+            layoutComboBox.setValue(settings.get("Main", "currentLayout"));
+        }
+        updateButtons();
+    }
+    
+    public void updateLayouts(){
+        layoutComboBox.getItems().clear();
+        layoutComboBox.getItems().addAll(BBFiles.getLayoutList());
+    }
+    
+    public void updateButtons(){
+        buttonsFlowPane.getChildren().clear();
+        for(String bId : BBFiles.getButtonList((String) layoutComboBox.getValue())){
+            ButtonProperties bp = BBFiles.getButtonProperties((String) layoutComboBox.getValue(), bId);
+            Button buttonToAdd = new Button();
+            
+            //Setting button properties
+            buttonToAdd.setPrefSize(75, 75);
+            buttonToAdd.setMinSize(75, 75);
+            
+            buttonToAdd.setText(bp.text);
+            buttonToAdd.setTextFill(bp.textColor);
+
+            if (!bp.hasIcon) {
+                buttonToAdd.setGraphic(null);
+            } else {
+                try (FileInputStream fis = new FileInputStream(bp.iconPath)){
+                    ImageView imageView = new ImageView(new Image(fis));
+                    imageView.setPreserveRatio(true);
+                    imageView.setFitWidth(16);
+                    imageView.setFitHeight(16);
+                    buttonToAdd.setGraphic(imageView);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    buttonToAdd.setGraphic(null);
+                }
+            }
+
+            BackgroundFill[] fills = {new BackgroundFill(bp.backgroundColor, CornerRadii.EMPTY, Insets.EMPTY)};
+            BackgroundImage[] images = new BackgroundImage[1];
+            if (!bp.hasBackgroundImage) {
+                images[0] = null;
+            } else {
+                try (FileInputStream fis = new FileInputStream(bp.backgroundImagePath)){
+                    Image image = new Image(fis);
+                    images[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    images[0] = null;
+                }
+            }
+            buttonToAdd.setBackground(new Background(fills, images));
+            
+            
+            //Creating button context menu
+            ContextMenu buttonContextMenu = new ContextMenu();
+            MenuItem addButton = new MenuItem("Add Button");
+            addButton.setOnAction((ActionEvent e) -> {
+                try {
+                    addButtonContexMenuItemClicked();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            MenuItem editButton = new MenuItem("Edit Button");
+            editButton.setOnAction(e->{
+                try {
+                    editButtonContexMenuItemClicked(bId);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            MenuItem removeButton = new MenuItem("Remove Button");
+            removeButton.setOnAction(e->{
+                try {
+                    removeButtonContexMenuItemClicked(bId);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            buttonContextMenu.getItems().addAll(addButton, new SeparatorMenuItem(), editButton, removeButton);
+            
+            
+            //Setting button events
+            buttonToAdd.setOnContextMenuRequested(e -> {
+                //Variable saying if opened is needed because the flowpane contextMenu 
+                //is fired afterwards if we dont tell it not to
+                buttonContextMenuActivated = true;
+                buttonContextMenu.show(buttonToAdd, e.getScreenX(), e.getScreenY());
+            });
+            buttonToAdd.setOnMouseClicked(e -> {
+                //Mouse clicked gets called first
+                if (buttonContextMenu.isShowing()) {
+                    //Gotta hide it first or it'll look weird when we open it again
+                    buttonContextMenu.hide();
+                }
+                if(bp.hasSound && !e.getButton().equals(MouseButton.SECONDARY)){
+                    ae.play(bp.soundPath);
+                }
+            });
+            
+            buttonsFlowPane.getChildren().add(buttonToAdd);
+        }
     }
     
     public void close(){
@@ -105,23 +343,14 @@ public class MainWindowController{
         settings.put("Main", "link", linkToggleButton.isSelected());
         settings.put("Main", "output", outputCheckBox.isSelected());
         settings.put("Main", "outputVOL", outputSlider.getValue());
-        try{
-            settings.store(settingsFile);
-        }
-        catch(IOException ioe){
-            ioe.printStackTrace();
-        }
+        settings.put("Main", "currentLayout", layoutComboBox.getValue());
+        
+        BBFiles.saveSettings(settings);
         
         Platform.exit();
     }
-    
-    public void start(){
 
-        ae.play(Main.class.getResource("/sounds/Grapefruit Technique (online-audio-converter.com).wav"));
-
-    }
-    
-    //Controls - except for slider wich are in innit cause they don't have an onAction
+    //Controls - except for slider wich are in init cause they don't have an onAction
     public void stop(){
         ae.stop();
     }
@@ -144,6 +373,11 @@ public class MainWindowController{
         }
     }
     
+    public void layoutComboBoxChanged(){
+        if (layoutComboBox.getValue() != null)
+            updateButtons();
+    }
+    
     //Layout context menu
     public void addLayoutContexMenuItemClicked() throws Exception{
         Stage stageLayout = new Stage();
@@ -161,11 +395,106 @@ public class MainWindowController{
         controller.init(this, stageLayout, "");
         
         stageLayout.showAndWait();
+        
+        if(controller.success){
+            updateLayouts();
+            layoutComboBox.setValue(layoutComboBox.getItems().get(layoutComboBox.getItems().size() - 1));  
+        }
     }
     
-    public void editLayoutContexMenuItemClicked() throws Exception{}
+    public void editLayoutContexMenuItemClicked() throws Exception{
+        Stage stageLayout = new Stage();
+        
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LayoutWindow.fxml"));
+        Parent root = loader.load();
+        LayoutWindowController controller = loader.getController();       
+        Scene scene = new Scene(root);
+        
+        stageLayout.setScene(scene);
+        stageLayout.setTitle("BlastBoard - Layout");
+        stageLayout.setMinWidth(650);
+        stageLayout.setMinHeight(450);
+        stageLayout.initModality(Modality.APPLICATION_MODAL);
+        controller.init(this, stageLayout, (String) layoutComboBox.getValue());
+        
+        stageLayout.showAndWait();
+        
+        if(controller.success){
+            int index = layoutComboBox.getItems().indexOf(layoutComboBox.getValue());
+            updateLayouts();
+            layoutComboBox.setValue(layoutComboBox.getItems().get(index)); 
+        }
+    }
     
-    public void removeLayoutContexMenuItemClicked() throws Exception{}
+    public void removeLayoutContexMenuItemClicked() throws Exception{
+        String layoutID = (String) layoutComboBox.getValue();
+        
+        List<String> layoutList = BBFiles.getLayoutList();
+        layoutList.remove(layoutID);
+        BBFiles.saveLayoutList(layoutList);
+        
+        updateLayouts();
+        layoutComboBox.setValue(layoutComboBox.getItems().get(layoutComboBox.getItems().size() - 1));
+        //Need to hide the popup or it looks weird
+        layoutComboBox.hide();
+        
+        BBFiles.deleteLayout(layoutID);
+    }
+    
+    //Button context menu
+    public void addButtonContexMenuItemClicked() throws Exception{
+        Stage stageButton = new Stage();
+        
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ButtonWindow.fxml"));
+        Parent root = loader.load();
+        ButtonWindowController controller = loader.getController();       
+        Scene scene = new Scene(root);
+        
+        stageButton.setScene(scene);
+        stageButton.setTitle("BlastBoard - Layout");
+        stageButton.setMinWidth(650);
+        stageButton.setMinHeight(295);
+        stageButton.initModality(Modality.APPLICATION_MODAL);
+        controller.init(this, stageButton, (String) layoutComboBox.getValue(), "");
+        
+        stageButton.showAndWait();
+        
+        if(controller.success){
+            updateButtons();
+        }
+    }
+    
+    public void editButtonContexMenuItemClicked(String buttonID) throws Exception{
+        Stage stageButton = new Stage();
+        
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ButtonWindow.fxml"));
+        Parent root = loader.load();
+        ButtonWindowController controller = loader.getController();       
+        Scene scene = new Scene(root);
+        
+        stageButton.setScene(scene);
+        stageButton.setTitle("BlastBoard - Layout");
+        stageButton.setMinWidth(650);
+        stageButton.setMinHeight(295);
+        stageButton.initModality(Modality.APPLICATION_MODAL);
+        controller.init(this, stageButton, (String) layoutComboBox.getValue(), buttonID);
+        
+        stageButton.showAndWait();
+        
+        if(controller.success){
+            updateButtons();
+        }
+    }
+    
+    public void removeButtonContexMenuItemClicked(String buttonID) throws Exception{
+        List<String> buttonList = BBFiles.getButtonList((String) layoutComboBox.getValue());
+        buttonList.remove(buttonID);
+        BBFiles.saveButtonList((String) layoutComboBox.getValue(), buttonList);
+        
+        updateButtons();
+        
+        BBFiles.deleteButton((String) layoutComboBox.getValue(), buttonID);
+    }
     
     //Menu bar
     public void audioSettingsMenuBarItemClicked() throws Exception{
@@ -203,7 +532,10 @@ public class MainWindowController{
         }
     }
     
-    public void test(){
-        
+    public void test() throws UnsupportedEncodingException{
+        URL resource = BBFiles.class.getResource("/ffmpeg/win/x64/bin/ffmpeg.exe");
+        File file = new File(resource.getPath());
+        System.out.println(resource.getPath());
+        System.out.println(file.getAbsolutePath());
     }
 }

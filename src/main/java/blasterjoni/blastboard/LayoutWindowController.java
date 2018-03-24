@@ -8,15 +8,7 @@ package blasterjoni.blastboard;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -36,22 +28,22 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.json.simple.JSONObject;
 
 /**
  * FXML Controller class
  *
  * @author João Arvana
  */
+
+//TODO: ADD clear path function
 public class LayoutWindowController {
 
+    // <editor-fold defaultstate="collapsed" desc=" Fields for fxml injection ">
     @FXML
     private ComboBox previewComboBox;
     @FXML
@@ -90,9 +82,12 @@ public class LayoutWindowController {
     
     @FXML
     private Button okButton;
+
+// </editor-fold>
     
-    MainWindowController parentController;
+    public MainWindowController parentController;
     public Stage stage;
+    public boolean success = false;
     
     private String layoutID;
     private Boolean editing = false;
@@ -103,18 +98,76 @@ public class LayoutWindowController {
         
         //TODO: Add parameters for editing (LayoutID)
         layoutID = id;
+        
+        final BackgroundFill[] buttonFills = new BackgroundFill[1];
+        final BackgroundImage[] buttonImages = new BackgroundImage[1];
+        
         if(layoutID.equals("")){  
             layoutTextTextField.setText("Layout");
-            layoutTextColorPicker.setValue(Color.BLACK);
+            layoutTextColorPicker.setValue(Color.web("#000000"));
             
             buttonTextTextField.setText("Button");
             previewButton.setText("Button");
-            buttonTextColorPicker.setValue(Color.BLACK);
+            buttonTextColorPicker.setValue(Color.web("#000000"));
+            previewButton.setTextFill(Color.web("#000000"));
+            previewButton.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         }
         else{
-            //TODO: import settins
+            editing = true;
+            okButton.setDisable(false);
+            LayoutProperties layout = BBFiles.getLayoutProperties(layoutID);
+            
+            layoutIdTextField.setText(layoutID);
+            
+            //Set layout fields, they get applied automatically when the layout gets added to the combobox
+            layoutTextTextField.setText(layout.text);
+            layoutTextColorPicker.setValue(layout.textColor);
+            if(layout.hasIcon){
+                layoutIconTextField.setText(layout.iconPath);
+            }  
+            if(layout.hasBackgroundImage){
+                layoutBackgroundTextField.setText(layout.backgroundImagePath);
+            }
+            layoutBackgroundColorPicker.setValue(layout.backgroundColor);
+            
+            //Set button fields
+            buttonTextTextField.setText(layout.buttonDefault.text);
+            buttonTextColorPicker.setValue(layout.buttonDefault.textColor);
+            if(layout.buttonDefault.hasIcon){
+                buttonIconTextField.setText(layout.buttonDefault.iconPath);
+            }
+            if(layout.buttonDefault.hasBackgroundImage){
+                buttonBackgroundTextField.setText(layout.buttonDefault.backgroundImagePath);
+            }
+            buttonBackgroundColorPicker.setValue(layout.buttonDefault.backgroundColor);
+            //Update Button
+            previewButton.setText(layout.buttonDefault.text);
+            previewButton.setTextFill(layout.buttonDefault.textColor);
+            if(layout.buttonDefault.hasIcon){
+                try (FileInputStream fis = new FileInputStream(layout.buttonDefault.iconPath)){
+                    ImageView imageView = new ImageView(new Image(fis));
+                    imageView.setPreserveRatio(true);
+                    imageView.setFitWidth(16);
+                    imageView.setFitHeight(16);
+                    previewButton.setGraphic(imageView);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    previewButton.setGraphic(null);
+                }
+            }   
+            if(layout.buttonDefault.hasBackgroundImage){
+                try (FileInputStream fis = new FileInputStream(layout.buttonDefault.backgroundImagePath)){
+                    Image image = new Image(fis);
+                    buttonImages[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    buttonImages[0] = null;
+                }
+            }
+            buttonFills[0] = new BackgroundFill(layout.buttonDefault.backgroundColor, CornerRadii.EMPTY, Insets.EMPTY);
+            previewButton.setBackground(new Background(buttonFills, buttonImages));
         }
-        previewComboBox.getItems().addAll(layoutID);
+        previewComboBox.getItems().add(layoutID);
         previewComboBox.setValue(layoutID);
         
         final Callback<ListView<String>, ListCell<String>> cellFactory;
@@ -145,10 +198,10 @@ public class LayoutWindowController {
                             if (layoutIconTextField.getText().equals("")) {
                                 rectangle.setImage(null);
                             } else {
-                                try {
-                                    rectangle.setImage(new Image(new FileInputStream(layoutIconTextField.getText())));
-                                } catch (FileNotFoundException FNFE) {
-                                    FNFE.printStackTrace();
+                                try (FileInputStream fis = new FileInputStream(layoutIconTextField.getText())){
+                                    rectangle.setImage(new Image(fis));
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
                                     rectangle.setImage(null);
                                 }
                             }
@@ -159,11 +212,11 @@ public class LayoutWindowController {
                             if (layoutBackgroundTextField.getText().equals("")) {
                                 images[0] = null;
                             } else {
-                                try {
-                                    Image image = new Image(new FileInputStream(layoutBackgroundTextField.getText()));
+                                try (FileInputStream fis = new FileInputStream(layoutBackgroundTextField.getText())){
+                                    Image image = new Image(fis);
                                     images[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
-                                } catch (FileNotFoundException FNFE) {
-                                    FNFE.printStackTrace();
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
                                     images[0] = null;
                                 }
                             }
@@ -180,8 +233,13 @@ public class LayoutWindowController {
         layoutIdTextField.textProperty().addListener(new ChangeListener<String>(){
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                File Dir = new File(parentController.layoutsDir + "/" + layoutIdTextField.getText());
-                if(layoutIdTextField.getLength() > 0 && !Dir.exists()){
+                List<String> layouts = BBFiles.getLayoutList();
+
+                int idLength = layoutIdTextField.getLength();
+                boolean notExists  = !layouts.contains(layoutIdTextField.getText());
+                boolean sameLayoutID = layoutID.equals(layoutIdTextField.getText());
+                
+                if( idLength > 0 && (notExists || (editing && sameLayoutID)) ){
                     layoutIdTextField.setStyle("-fx-control-inner-background: white;");
                     okButton.setDisable(false);
                 } else {
@@ -248,28 +306,25 @@ public class LayoutWindowController {
                 if (buttonIconTextField.getText().equals("")) {
                     previewButton.setGraphic(null);
                 } else {
-                    try {
-                        ImageView imageView = new ImageView(new Image(new FileInputStream(buttonIconTextField.getText())));
+                    try (FileInputStream fis = new FileInputStream(buttonIconTextField.getText())){
+                        ImageView imageView = new ImageView(new Image(fis));
                         imageView.setPreserveRatio(true);
                         imageView.setFitWidth(16);
                         imageView.setFitHeight(16);
                         previewButton.setGraphic(imageView);
-                    } catch (FileNotFoundException FNFE) {
-                        FNFE.printStackTrace();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                         previewButton.setGraphic(null);
                     }
                 }
             }
         });
         
-        final BackgroundFill[] fills = new BackgroundFill[1];
-        final BackgroundImage[] images = new BackgroundImage[1];
-        
         buttonBackgroundColorPicker.valueProperty().addListener(new ChangeListener<Color>() {
             @Override
             public void changed(ObservableValue<? extends Color> observable, Color oldValue, Color newValue) {
-                fills[0] = new BackgroundFill(buttonBackgroundColorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY);
-                previewButton.setBackground(new Background(fills, images));
+                buttonFills[0] = new BackgroundFill(buttonBackgroundColorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY);
+                previewButton.setBackground(new Background(buttonFills, buttonImages));
             }
         });
         
@@ -277,20 +332,20 @@ public class LayoutWindowController {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 if (buttonBackgroundTextField.getText().equals("")) {
-                    images[0] = null;
+                    buttonImages[0] = null;
                 } else {
-                    try {
-                        Image image = new Image(new FileInputStream(buttonBackgroundTextField.getText()));
-                        images[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
-                    } catch (FileNotFoundException FNFE) {
-                        FNFE.printStackTrace();
-                        images[0] = null;
+                    try (FileInputStream fis = new FileInputStream(buttonBackgroundTextField.getText())){
+                        Image image = new Image(fis);
+                        buttonImages[0] = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(0, 0, true, true, false, true));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        buttonImages[0] = null;
                     }
                 }
-                previewButton.setBackground(new Background(fills, images));
+                previewButton.setBackground(new Background(buttonFills, buttonImages));
             }
         });
-// </editor-fold>
+        // </editor-fold>
     }
     
     // <editor-fold defaultstate="collapsed" desc=" Layout onAction ">
@@ -344,86 +399,66 @@ public class LayoutWindowController {
         buttonBackgroundTextField.setText(file.toString());
     }
 
-// </editor-fold>
+    // </editor-fold>
     
     public void cancelButtonClicked(){
+        success = false;
         stage.close();
     }
     
     public void okButtonClicked(){
+        success = true;
+        
         if(!editing){
-            File newLayoutDir = new File(parentController.layoutsDir + "/" + layoutIdTextField.getText());
-            newLayoutDir.mkdirs();
+            BBFiles.saveLayout(
+                    //Default Layout
+                    layoutIdTextField.getText(), 
+                    layoutTextTextField.getText(),
+                    layoutTextColorPicker.getValue(),
+                    layoutIconTextField.getText(),
+                    layoutBackgroundTextField.getText(),
+                    layoutBackgroundColorPicker.getValue(),
+                    //Default Button
+                    buttonTextTextField.getText(),
+                    buttonTextColorPicker.getValue(),
+                    buttonIconTextField.getText(),
+                    buttonBackgroundTextField.getText(),
+                    buttonBackgroundColorPicker.getValue()
+                    );
+            //Create the file where the button order is stored
+            BBFiles.createNewButtonList(layoutIdTextField.getText());
             
-            JSONObject layoutProperties = new JSONObject();
+            //Add layout to layout list
+            List<String> layoutList = BBFiles.getLayoutList();
+            layoutList.add(layoutIdTextField.getText());
+            BBFiles.saveLayoutList(layoutList);
             
-            layoutProperties.put("text", layoutTextTextField.getText());
-            layoutProperties.put("textColor", "#" + Integer.toHexString(layoutTextColorPicker.getValue().hashCode()));
+            stage.close();
+        }else{
+            //We save to old ID dir first, and then if new ID move the folder
             
-            if(!layoutIconTextField.getText().equals("")){
-                layoutProperties.put("icon", true);
-                try {
-                    Files.copy(Paths.get(layoutIconTextField.getText()), Paths.get(newLayoutDir.getAbsolutePath() + "/icon"), StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException IOE) {
-                    IOE.printStackTrace();
-                }
-            } else {
-                layoutProperties.put("icon", false);
-            }
+            BBFiles.saveLayout(
+                    //Default Layout
+                    layoutID, 
+                    layoutTextTextField.getText(),
+                    layoutTextColorPicker.getValue(),
+                    layoutIconTextField.getText(),
+                    layoutBackgroundTextField.getText(),
+                    layoutBackgroundColorPicker.getValue(),
+                    //Default Button
+                    buttonTextTextField.getText(),
+                    buttonTextColorPicker.getValue(),
+                    buttonIconTextField.getText(),
+                    buttonBackgroundTextField.getText(),
+                    buttonBackgroundColorPicker.getValue()
+                    );
+
+            stage.close();
             
-            if(!layoutBackgroundTextField.getText().equals("")){
-                layoutProperties.put("backgroundImage", true);
-                try {
-                    Files.copy(Paths.get(layoutBackgroundTextField.getText()), Paths.get(newLayoutDir.getAbsolutePath() + "/background"), StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException IOE) {
-                    IOE.printStackTrace();
-                }
-            } else {
-                layoutProperties.put("backgroundImage", false);
-            }
-            layoutProperties.put("backgroundColor", "#" + Integer.toHexString(layoutBackgroundColorPicker.getValue().hashCode()));
-            
-            
-            JSONObject defaultButtonProperties = new JSONObject();
-            
-            defaultButtonProperties.put("text", buttonTextTextField.getText());
-            defaultButtonProperties.put("textColor", "#" + Integer.toHexString(buttonTextColorPicker.getValue().hashCode()));
-            
-            if(!buttonIconTextField.getText().equals("")){
-                defaultButtonProperties.put("icon", true);
-                try {
-                    Files.copy(Paths.get(buttonIconTextField.getText()), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonIcon"), StandardCopyOption.REPLACE_EXISTING);
-                    File f = new File(buttonIconTextField.getText());
-                } catch (IOException IOE) {
-                    IOE.printStackTrace();
-                }
-            } else {
-                defaultButtonProperties.put("icon", false);
-            }
-            
-            if(!buttonBackgroundTextField.getText().equals("")){
-                defaultButtonProperties.put("backgroundImage", true);
-                try {
-                    Files.copy(Paths.get(buttonBackgroundTextField.getText()), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonBackground"), StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException IOE) {
-                    IOE.printStackTrace();
-                }
-            } else {
-                defaultButtonProperties.put("backgroundImage", false);
-            }
-            defaultButtonProperties.put("backgroundColor", "#" + Integer.toHexString(buttonBackgroundColorPicker.getValue().hashCode()));
-            
-            
-            layoutProperties.put("buttonDefaultProperties", defaultButtonProperties);
-            
-            try(FileWriter file = new FileWriter(newLayoutDir + "/layout.json")){
-                file.write(layoutProperties.toJSONString());
-                file.flush();
-            }catch(IOException IOE){
-                IOE.printStackTrace();
+            if(!layoutID.equals(layoutIdTextField.getText())){
+                BBFiles.changeLayoutID(layoutID, layoutIdTextField.getText());
             }
         }
-        //TODO: if edditing, change settings and maybe change folder name
     }
     
 }

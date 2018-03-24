@@ -1,8 +1,11 @@
 package blasterjoni.blastboard;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import javax.sound.sampled.*;
 import java.io.IOException;
-import java.net.URL;
+
+//TODO: Change this to VLCj
 public class AudioEngine {
 
     private final Mixer.Info[] mixers = AudioSystem.getMixerInfo();
@@ -57,7 +60,7 @@ public class AudioEngine {
         playing = false;
     }
 
-    public void play(URL url){
+    public void play(String path){
         playing = true;
         try{
             //Creating lines
@@ -75,9 +78,9 @@ public class AudioEngine {
             secondGainControl.setValue((float)(Math.log(secondVolume) / Math.log(10.0) * 20.0));
 
             //Run threads that write the data from the AudioInputStream to the lines
-            Runnable firstWAISTL = new WriteAudioInputStreamToLine(url, firstSourceLine);
+            Runnable firstWAISTL = new WriteAudioInputStreamToLine(path, firstSourceLine);
             new Thread(firstWAISTL).start();
-            Runnable secondWAISTL = new WriteAudioInputStreamToLine(url, secondSourceLine);
+            Runnable secondWAISTL = new WriteAudioInputStreamToLine(path, secondSourceLine);
             new Thread(secondWAISTL).start();
         }
         catch (LineUnavailableException lue){
@@ -88,12 +91,12 @@ public class AudioEngine {
     //Here be dragons!
     private class WriteAudioInputStreamToLine implements Runnable {
 
-        URL url;
+        String path;
         SourceDataLine sourceLine;
         int outputNumber;
 
-        public WriteAudioInputStreamToLine(URL url, SourceDataLine sourceLine){
-            this.url = url;
+        public WriteAudioInputStreamToLine(String path, SourceDataLine sourceLine){
+            this.path = path;
             this.sourceLine = sourceLine;
         }
 
@@ -102,17 +105,17 @@ public class AudioEngine {
 
         @Override
         public void run() {
-            try {
-                AudioInputStream audioStream  = AudioSystem.getAudioInputStream(url);
+            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path))){
+                AudioInputStream audioStream  = AudioSystem.getAudioInputStream(bis);
                 int count;
                 while ((count = audioStream.read(buffer, 0, buffer.length)) != -1) {
-                    if (count > 0) {
+                    if (count > 0)
                         sourceLine.write(buffer, 0, count);
-                    }
                     if (!playing)
                         break;
                 }
-                //sourceLine.drain(); //This play what's in cache till the end
+                if(playing)
+                    sourceLine.drain(); //This play what's in buffer till the end
                 sourceLine.close();
             }
             catch (UnsupportedAudioFileException | IOException ex){
