@@ -2,6 +2,7 @@ package blasterjoni.blastboard;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -40,6 +41,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import net.bramp.ffmpeg.FFmpeg;
 import org.ini4j.Ini;
 
 /*
@@ -532,10 +534,7 @@ public class MainWindowController{
         }
     }
     
-    public void test() throws UnsupportedEncodingException{
-        URL resource = BBFiles.class.getResource("/ffmpeg/win/x64/bin/ffmpeg.exe");
-        File file = new File(resource.getPath());
-        System.out.println(resource.getPath());
-        System.out.println(file.getAbsolutePath());
+    public void test() throws IOException{
+        FFmpeg ff = new FFmpeg();
     }
 }

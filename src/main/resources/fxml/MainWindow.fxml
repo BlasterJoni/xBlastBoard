@@ -38,7 +38,7 @@
                <items>
                   <MenuItem disable="true" mnemonicParsing="false" text="Donate" />
                   <MenuItem disable="true" mnemonicParsing="false" text="About" />
-                  <MenuItem disable="true" mnemonicParsing="false" onAction="#test" text="Test" />
+                  <MenuItem mnemonicParsing="false" onAction="#test" text="Test" />
                </items>
             </Menu>
          </menus>

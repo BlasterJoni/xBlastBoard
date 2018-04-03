@@ -280,7 +280,7 @@ public class ButtonWindowController {
     public void buttonSoundPathButtonClicked(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select sound file");
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Sound", "*.wav", "*.aiff", "*.flac", "*.mp3", "*.wma", "*.webm");
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Sound", "*.mp3", "*.wav", "*.aiff", "*.flac", "*.wma", "*.webm");
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         

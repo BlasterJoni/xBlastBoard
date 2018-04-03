@@ -120,5 +120,10 @@
             <artifactId>ffmpeg</artifactId>
             <version>0.6.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.googlecode.soundlibs</groupId>
+            <artifactId>mp3spi</artifactId>
+            <version>1.9.5.4</version>
+        </dependency>
     </dependencies>
 </project>

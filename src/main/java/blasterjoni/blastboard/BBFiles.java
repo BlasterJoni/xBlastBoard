@@ -6,9 +6,13 @@
 package blasterjoni.blastboard;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.FileVisitResult;
@@ -21,13 +25,26 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
+import net.bramp.ffmpeg.FFmpegUtils;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
+import net.bramp.ffmpeg.job.FFmpegJob;
+import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import net.bramp.ffmpeg.progress.Progress;
+import net.bramp.ffmpeg.progress.ProgressListener;
+import org.apache.commons.io.FilenameUtils;
 import org.ini4j.Ini;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -446,45 +463,115 @@ public class BBFiles {
         if(!buttonSound.equals("")){
             buttonProperties.put("sound", true);
             try {
-                //java.nio.file.Files.copy(Paths.get(buttonSound), Paths.get(newButtonDir.getAbsolutePath() + "/sound"), StandardCopyOption.REPLACE_EXISTING);
-                
-                //TODO: Find a good crossplatform solution, ill just use this lib and include them all (for all os) in the resources
-                FFmpeg ffmpeg;
-                FFprobe ffprobe;
-                
-                String path = BBFiles.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-                File jar = new File(path);
-                String parentDir = jar.getParentFile().getAbsolutePath();
-                String decodedParentDir = URLDecoder.decode(parentDir, "UTF-8");
+                if(FilenameUtils.getExtension(buttonSound).equals("mp3")){
+                    //java.nio.file.Files.copy(Paths.get(buttonSound), Paths.get(newButtonDir.getAbsolutePath() + "/sound"), StandardCopyOption.REPLACE_EXISTING);
+                    Stage stageACPB = new Stage();
+        
+                    FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/AFConvMovProgressBarWindow.fxml"));
+                    Parent root = loader.load();
+                    AFConvMovProgressBarWindowController controller = loader.getController();       
+                    Scene scene = new Scene(root);
+                    
+                    Runnable job = new Runnable() {
+                        @Override
+                        public void run() {
+                            File src = new File(buttonSound);
+                            File dst  = new File(newButtonDir.getAbsolutePath() + "/sound.mp3");
+                            try {
+                                InputStream in = new FileInputStream(src);
+                                OutputStream out = new FileOutputStream(dst);
+                                // Transfer bytes from in to out
+                                long expectedBytes = src.length(); // This is the number of bytes we expected to copy..
+                                long totalBytesCopied = 0; // This will track the total number of bytes we've copied
+                                byte[] buf = new byte[1024];
+                                int len = 0;
+                                while ((len = in.read(buf)) > 0) {
+                                    out.write(buf, 0, len);
+                                    totalBytesCopied += len;
+                                    double progress = (double)totalBytesCopied / (double)expectedBytes;
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(progress);
+                                        }
+                                    });
+                                }
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        stageACPB.close();
+                                    }
+                                });
+                                in.close();
+                                out.close();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    };
+                    
+                    
+                    stageACPB.setScene(scene);
+                    stageACPB.setTitle("BlastBoard - Moving audio file");
+                    stageACPB.setMinWidth(550);
+                    stageACPB.setMinHeight(150);
+                    stageACPB.initModality(Modality.APPLICATION_MODAL);
+                    controller.init(stageACPB, job);
 
-                if(Utils.isWindows()){
-                    if(System.getProperty("sun.arch.data.model").equalsIgnoreCase("64")){
-                        ffmpeg = new FFmpeg(decodedParentDir+"/ffmpeg/win/x64/ffmpeg.exe");
-                        ffprobe = new FFprobe(decodedParentDir+"/ffmpeg/win/x64/ffprobe.exe");
-                    } else {
-                        ffmpeg = new FFmpeg(decodedParentDir+"/ffmpeg/win/x32/ffmpeg.exe");
-                        ffprobe = new FFprobe(decodedParentDir+"/ffmpeg/win/x32/ffprobe.exe");
-                    }   
-                } else if(Utils.isMac()){
-                    ffmpeg = new FFmpeg(decodedParentDir+"/ffmpeg/macos/x64/ffmpeg");
-                    ffprobe = new FFprobe(decodedParentDir+"/ffmpeg/macos/x64/ffprobe");
+                    stageACPB.showAndWait();
                 } else {
-                    ffmpeg = new FFmpeg();
-                    ffprobe = new FFprobe(); 
+                    Stage stageACPB = new Stage();
+        
+                    FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/AFConvMovProgressBarWindow.fxml"));
+                    Parent root = loader.load();
+                    AFConvMovProgressBarWindowController controller = loader.getController();       
+                    Scene scene = new Scene(root);
+
+                    
+                    FFmpeg ffmpeg = new FFmpeg();
+                    FFprobe ffprobe = new FFprobe();
+                    
+                    FFmpegProbeResult in = ffprobe.probe(buttonSound);
+                    FFmpegBuilder builder = new FFmpegBuilder()
+                            .setInput(in)
+                            .overrideOutputFiles(true)
+                            .addOutput(newButtonDir.getAbsolutePath() + "/sound.mp3")
+                                .setFormat("mp3")
+                                .setAudioChannels(2)
+                                .setAudioSampleRate(44_100)
+                                .done();
+
+                    FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
+
+                    FFmpegJob job = executor.createJob(builder, new ProgressListener() {
+                        // Using the FFmpegProbeResult determine the duration of the input
+                        final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
+
+                        @Override
+                        public void progress(Progress progress) {
+                                double percentage = progress.out_time_ns / duration_ns;
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        controller.setProgressValue(percentage);
+                                        if(progress.status.toString().equals("end")){
+                                            stageACPB.close(); 
+                                        }
+                                    }
+                                });
+                        }
+                    });
+                    
+
+                    stageACPB.setScene(scene);
+                    stageACPB.setTitle("BlastBoard - Converting audio file");
+                    stageACPB.setMinWidth(550);
+                    stageACPB.setMinHeight(150);
+                    stageACPB.initModality(Modality.APPLICATION_MODAL);
+                    controller.init(stageACPB, job);
+
+                    stageACPB.showAndWait();
                 }
-                
-                FFmpegBuilder builder = new FFmpegBuilder()
-                        .setInput(buttonSound)
-                        .overrideOutputFiles(true)
-                        .addOutput(newButtonDir.getAbsolutePath() + "/sound")
-                            .setFormat("wav")
-                            .setAudioChannels(2)
-                            .setAudioSampleRate(44_100)
-                            .done();
-                
-                FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
-                
-                executor.createJob(builder).run();
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 System.out.println("FFmpeg not found");
@@ -583,7 +670,7 @@ public class BBFiles {
             button.backgroundColor = Color.WHITE;
         }
         button.hasSound = (Boolean) buttonJSON.getOrDefault("sound", false);
-        button.soundPath = workingButtonDIR + "/sound";
+        button.soundPath = workingButtonDIR + "/sound.mp3";
         
         return button;
     }
