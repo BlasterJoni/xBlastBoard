@@ -189,7 +189,7 @@ public class BBFiles {
         if(!layoutIcon.equals("")){
             layoutProperties.put("icon", true);
             try {
-                java.nio.file.Files.copy(Paths.get(layoutIcon), Paths.get(newLayoutDir.getAbsolutePath() + "/icon"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(layoutIcon), Paths.get(newLayoutDir.getAbsolutePath() + "/icon"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 layoutProperties.put("icon", false);
@@ -201,7 +201,7 @@ public class BBFiles {
         if(!layoutBackground.equals("")){
             layoutProperties.put("backgroundImage", true);
             try {
-                java.nio.file.Files.copy(Paths.get(layoutBackground), Paths.get(newLayoutDir.getAbsolutePath() + "/background"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(layoutBackground), Paths.get(newLayoutDir.getAbsolutePath() + "/background"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 layoutProperties.put("backgroundImage", false);
@@ -221,7 +221,7 @@ public class BBFiles {
         if(!buttonIcon.equals("")){
             defaultButtonProperties.put("icon", true);
             try {
-                java.nio.file.Files.copy(Paths.get(buttonIcon), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonIcon"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(buttonIcon), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonIcon"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 defaultButtonProperties.put("icon", false);
@@ -233,7 +233,7 @@ public class BBFiles {
         if(!buttonBackground.equals("")){
             defaultButtonProperties.put("backgroundImage", true);
             try {
-                java.nio.file.Files.copy(Paths.get(buttonBackground), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonBackground"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(buttonBackground), Paths.get(newLayoutDir.getAbsolutePath() + "/buttonBackground"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 defaultButtonProperties.put("backgroundImage", false);
@@ -446,7 +446,7 @@ public class BBFiles {
         if(!buttonIcon.equals("")){
             buttonProperties.put("icon", true);
             try {
-                java.nio.file.Files.copy(Paths.get(buttonIcon), Paths.get(newButtonDir.getAbsolutePath() + "/icon"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(buttonIcon), Paths.get(newButtonDir.getAbsolutePath() + "/icon"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 buttonProperties.put("icon", false);
@@ -458,7 +458,7 @@ public class BBFiles {
         if(!buttonBackground.equals("")){
             buttonProperties.put("backgroundImage", true);
             try {
-                java.nio.file.Files.copy(Paths.get(buttonBackground), Paths.get(newButtonDir.getAbsolutePath() + "/background"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(buttonBackground), Paths.get(newButtonDir.getAbsolutePath() + "/background"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException IOE) {
                 IOE.printStackTrace();
                 buttonProperties.put("backgroundImage", false);
@@ -471,6 +471,8 @@ public class BBFiles {
         if(!buttonSound.equals("")){
             buttonProperties.put("sound", true);
             //Checking if buttonSound is still the same sound, if not then move/convert the new one
+            //This is needed here but not in the other files because the other files use Files.copy, wich probably alredy checks for this
+            //or does some other kind of fuckery, while in the sound file we copying it manualy bit by bit in order to have a progress bar.
             if(!buttonSound.equals(LAYOUTSDIR + "/" + layoutId + "/" + buttonID + "/sound.mp3")){
                 try {
                     if(FilenameUtils.getExtension(buttonSound).equals("mp3")){
@@ -689,6 +691,7 @@ public class BBFiles {
     }
     
     //Importing and exporting
+    //TODO: export progress bar
     public static void exportLayout(String layoutID, File out){
         try {
             ZipFile zip = new ZipFile(out);
@@ -800,6 +803,7 @@ public class BBFiles {
     }
     
     
+    //TODO: export progress bar
     public static void exportButton(String layoutID, String buttonID, File out){
         try {
             ZipFile zip = new ZipFile(out);
