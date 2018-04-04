@@ -45,10 +45,12 @@ import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
+//ZIP4J FUCKING SUCKS
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.tools.ant.taskdefs.Zip;
@@ -475,16 +477,19 @@ public class BBFiles {
             //or does some other kind of fuckery, while in the sound file we copying it manualy bit by bit in order to have a progress bar.
             if(!buttonSound.equals(LAYOUTSDIR + "/" + layoutId + "/" + buttonID + "/sound.mp3")){
                 try {
+                    Stage stageACPB = new Stage();
+
+                    FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+                    Parent root = loader.load();
+                    ProgressBarWindowController controller = loader.getController();       
+                    Scene scene = new Scene(root);
+
+                    Runnable job;
+                    
                     if(FilenameUtils.getExtension(buttonSound).equals("mp3")){
                         //Files.copy(Paths.get(buttonSound), Paths.get(newButtonDir.getAbsolutePath() + "/sound"), StandardCopyOption.REPLACE_EXISTING);
-                        Stage stageACPB = new Stage();
 
-                        FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
-                        Parent root = loader.load();
-                        ProgressBarWindowController controller = loader.getController();       
-                        Scene scene = new Scene(root);
-
-                        Runnable job = new Runnable() {
+                        job = new Runnable() {
                             @Override
                             public void run() {
                                 File src = new File(buttonSound);
@@ -523,24 +528,8 @@ public class BBFiles {
                             }
                         };
 
-
-                        stageACPB.setScene(scene);
-                        stageACPB.setTitle("BlastBoard - Moving audio file");
-                        stageACPB.setMinWidth(550);
-                        stageACPB.setMinHeight(150);
-                        stageACPB.initModality(Modality.APPLICATION_MODAL);
-                        controller.init(stageACPB, job);
-
-                        stageACPB.showAndWait();
+                        stageACPB.setTitle("Moving audio file");
                     } else {
-                        Stage stageACPB = new Stage();
-
-                        FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
-                        Parent root = loader.load();
-                        ProgressBarWindowController controller = loader.getController();       
-                        Scene scene = new Scene(root);
-
-
                         FFmpeg ffmpeg = new FFmpeg();
                         FFprobe ffprobe = new FFprobe();
 
@@ -556,7 +545,7 @@ public class BBFiles {
 
                         FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
 
-                        FFmpegJob job = executor.createJob(builder, new ProgressListener() {
+                        job = executor.createJob(builder, new ProgressListener() {
                             // Using the FFmpegProbeResult determine the duration of the input
                             final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
 
@@ -575,17 +564,16 @@ public class BBFiles {
                                     System.out.println("Converting audio file: " + (int)(percentage*100) + "%");
                             }
                         });
-
-
-                        stageACPB.setScene(scene);
-                        stageACPB.setTitle("BlastBoard - Converting audio file");
-                        stageACPB.setMinWidth(550);
-                        stageACPB.setMinHeight(150);
-                        stageACPB.initModality(Modality.APPLICATION_MODAL);
-                        controller.init(stageACPB, job);
-
-                        stageACPB.showAndWait();
+                        
+                        stageACPB.setTitle("Converting audio file");
                     }
+                    stageACPB.setScene(scene);
+                    stageACPB.setMinWidth(550);
+                    stageACPB.setMinHeight(150);
+                    stageACPB.initModality(Modality.APPLICATION_MODAL);
+                    controller.init(stageACPB, job);
+
+                    stageACPB.showAndWait();
                 } catch (IOException IOE) {
                     IOE.printStackTrace();
                     System.out.println("FFmpeg not found");
@@ -691,13 +679,72 @@ public class BBFiles {
     }
     
     //Importing and exporting
-    //TODO: export progress bar
     public static void exportLayout(String layoutID, File out){
         try {
-            ZipFile zip = new ZipFile(out);
-            zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID), new ZipParameters());
-        } catch (ZipException ex) {
-            ex.printStackTrace();
+            Stage stageACPB = new Stage();
+            
+            FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+            Parent root = loader.load();
+            ProgressBarWindowController controller = loader.getController();            
+            Scene scene = new Scene(root);
+            
+            Runnable job = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ZipFile zip = new ZipFile(out);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ProgressMonitor zipPM = zip.getProgressMonitor();
+                                while(zipPM.getPercentDone() < 1){
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                while(zipPM.getState() == ProgressMonitor.STATE_BUSY){
+                                    int percent = zipPM.getPercentDone();
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(percent/100.00f);
+                                        }
+                                    });
+                                    System.out.println("Exporting button : " + percent + "%");
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            }
+                        }).start();
+                        zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID), new ZipParameters());
+                        
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                stageACPB.close();
+                            }
+                        });
+                    } catch (ZipException ex) {
+                        ex.printStackTrace();
+                    }                    
+                }
+            };
+            
+            stageACPB.setScene(scene);
+            stageACPB.setTitle("Exporting Button");
+            stageACPB.setMinWidth(550);
+            stageACPB.setMinHeight(150);
+            stageACPB.initModality(Modality.APPLICATION_MODAL);
+            controller.init(stageACPB, job);
+            
+            stageACPB.showAndWait();
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
         }
     } 
     
@@ -718,18 +765,32 @@ public class BBFiles {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                ProgressMonitor zipPM = zip.getProgressMonitor();
+                                while(zipPM.getPercentDone() < 1){
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                //Cant check for not busy here, it doesnt update busy when extracting
                                 while(true){
-                                    int percent = zip.getProgressMonitor().getPercentDone();
+                                    int percent = zipPM.getPercentDone();
                                     Platform.runLater(new Runnable() {
                                         @Override
                                         public void run() {
                                             controller.setProgressValue(percent/100.00f);
                                         }
                                     });
+                                    System.out.println("Importing layout : " + percent + "%");
                                     if(percent >= 99){
                                         break;
                                     }
-                                    System.out.println("Importing layout : " + percent + "%");
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
                                 }
                             }
                         }).start();
@@ -742,14 +803,19 @@ public class BBFiles {
                             }
                         });
                         
+                        //Generating new ID if needed
                         String folderName = directories[0].getName();
-                        if (new File(LAYOUTSDIR + "/" + folderName).exists()) {
-                            folderName = folderName + RandomStringUtils.randomAlphanumeric(10);
-                            directories[0].renameTo(new File(TMP + "/" + folderName));
+                        while(new File(LAYOUTSDIR + "/" + folderName).exists()){
+                            folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
                         }
+                        directories[0].renameTo(new File(TMP + "/" + folderName));
                         
                         try {
                             Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + folderName));
+                            
+                            List<String> layoutList = BBFiles.getLayoutList();
+                            layoutList.add(folderName);
+                            BBFiles.saveLayoutList(layoutList);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                             //Delete if failed to move
@@ -773,9 +839,76 @@ public class BBFiles {
                             }
                         }
                         
-                        List<String> layoutList = BBFiles.getLayoutList();
-                        layoutList.add(folderName);
-                        BBFiles.saveLayoutList(layoutList);
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                stageACPB.close();
+                            }
+                        });
+                    } catch (ZipException ex) {
+                        ex.printStackTrace();
+                    }                    
+                }
+            };
+            
+            stageACPB.setScene(scene);
+            stageACPB.setTitle("Importing Layout");
+            stageACPB.setMinWidth(550);
+            stageACPB.setMinHeight(150);
+            stageACPB.initModality(Modality.APPLICATION_MODAL);
+            controller.init(stageACPB, job);
+            
+            stageACPB.showAndWait();
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        }
+    }
+    
+    
+    //TODO: export progress bar
+    public static void exportButton(String layoutID, String buttonID, File out){   
+        try {
+            Stage stageACPB = new Stage();
+            
+            FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+            Parent root = loader.load();
+            ProgressBarWindowController controller = loader.getController();            
+            Scene scene = new Scene(root);
+            
+            Runnable job = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ZipFile zip = new ZipFile(out);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ProgressMonitor zipPM = zip.getProgressMonitor();
+                                while(zipPM.getPercentDone() < 1){
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                while(zipPM.getState() == ProgressMonitor.STATE_BUSY){
+                                    int percent = zipPM.getPercentDone();
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(percent/100.00f);
+                                        }
+                                    });
+                                    System.out.println("Exporting button : " + percent + "%");
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            }
+                        }).start();
+                        zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID+"/"+buttonID), new ZipParameters());
                         
                         Platform.runLater(new Runnable() {
                             @Override
@@ -790,7 +923,7 @@ public class BBFiles {
             };
             
             stageACPB.setScene(scene);
-            stageACPB.setTitle("BlastBoard - Importing Layout");
+            stageACPB.setTitle("Exporting Button");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
             stageACPB.initModality(Modality.APPLICATION_MODAL);
@@ -799,17 +932,6 @@ public class BBFiles {
             stageACPB.showAndWait();
         } catch (IOException iOException) {
             iOException.printStackTrace();
-        }
-    }
-    
-    
-    //TODO: export progress bar
-    public static void exportButton(String layoutID, String buttonID, File out){
-        try {
-            ZipFile zip = new ZipFile(out);
-            zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID+"/"+buttonID), new ZipParameters());
-        } catch (ZipException ex) {
-            ex.printStackTrace();
         }
     }
     
@@ -830,18 +952,32 @@ public class BBFiles {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                ProgressMonitor zipPM = zip.getProgressMonitor();
+                                while(zipPM.getPercentDone() < 1){
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                //Cant check for not busy here, it doesnt update busy when extracting
                                 while(true){
-                                    int percent = zip.getProgressMonitor().getPercentDone();
+                                    int percent = zipPM.getPercentDone();
                                     Platform.runLater(new Runnable() {
                                         @Override
                                         public void run() {
                                             controller.setProgressValue(percent/100.00f);
                                         }
                                     });
+                                    System.out.println("Importing button : " + percent + "%");
                                     if(percent >= 99){
                                         break;
                                     }
-                                    System.out.println("Importing button : " + percent + "%");
+                                    try {
+                                        Thread.sleep(15);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
                                 }
                             }
                         }).start();
@@ -854,14 +990,19 @@ public class BBFiles {
                             }
                         });
                         
+                        //Generating new ID if needed
                         String folderName = directories[0].getName();
-                        if (new File(LAYOUTSDIR + "/" + layoutID + "/" + folderName).exists()) {
-                            folderName = folderName + RandomStringUtils.randomAlphanumeric(10);
-                            directories[0].renameTo(new File(TMP + "/" + folderName));
+                        while(new File(LAYOUTSDIR + "/" + layoutID + "/" + folderName).exists()){
+                            folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
                         }
+                        directories[0].renameTo(new File(TMP + "/" + folderName));
                         
                         try {
                             Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + layoutID + "/" + folderName));
+                        
+                            List<String> buttonList = BBFiles.getButtonList(layoutID);
+                            buttonList.add(folderName);
+                            BBFiles.saveButtonList(layoutID, buttonList);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                             //Delete if failed to move
@@ -885,10 +1026,6 @@ public class BBFiles {
                             }
                         }
                         
-                        List<String> buttonList = BBFiles.getButtonList(layoutID);
-                        buttonList.add(folderName);
-                        BBFiles.saveButtonList(layoutID, buttonList);
-                        
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
@@ -902,7 +1039,7 @@ public class BBFiles {
             };
             
             stageACPB.setScene(scene);
-            stageACPB.setTitle("BlastBoard - Importing Button");
+            stageACPB.setTitle("Importing Button");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
             stageACPB.initModality(Modality.APPLICATION_MODAL);

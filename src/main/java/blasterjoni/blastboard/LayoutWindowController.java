@@ -103,8 +103,15 @@ public class LayoutWindowController {
         final BackgroundFill[] buttonFills = new BackgroundFill[1];
         final BackgroundImage[] buttonImages = new BackgroundImage[1];
         
-        if(layoutID.equals("")){  
-            layoutIdTextField.setText(RandomStringUtils.randomAlphanumeric(10));
+        if(layoutID.equals("")){
+            
+            //Generating new ID
+            List<String> layouts = BBFiles.getLayoutList();
+            String newID = RandomStringUtils.randomAlphanumeric(10);
+            while(layouts.contains(newID)){
+                newID = RandomStringUtils.randomAlphanumeric(10);
+            }
+            layoutIdTextField.setText(newID);
             
             layoutTextTextField.setText("Layout");
             layoutTextColorPicker.setValue(Color.web("#000000"));
@@ -362,11 +369,15 @@ public class LayoutWindowController {
     public void layoutIconPathButtonClicked() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select icon image");
-        //FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Images", "*.png", "*.gif", "*.jpg", "*.jpeg", "*.bmp");
-        //fileChooser.getExtensionFilters().add(extFilter);
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Images", "*.png", "*.gif", "*.jpg", "*.jpeg", "*.bmp");
+        fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        layoutIconTextField.setText(file.toString());
+        if(file!=null){
+            layoutIconTextField.setText(file.toString());
+        } else {
+            layoutIconTextField.setText("");
+        }
     }
     
     public void layoutBackgroundPathButtonClicked() {
@@ -376,7 +387,11 @@ public class LayoutWindowController {
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        layoutBackgroundTextField.setText(file.toString());
+        if(file!=null){
+            layoutBackgroundTextField.setText(file.toString());
+        } else {
+            layoutBackgroundTextField.setText("");
+        }
     }
 
 // </editor-fold>
@@ -389,7 +404,11 @@ public class LayoutWindowController {
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        buttonIconTextField.setText(file.toString());
+        if(file!=null){
+            buttonIconTextField.setText(file.toString());
+        } else {
+            buttonIconTextField.setText("");
+        }
     }
     
     public void buttonBackgroundPathButtonClicked() {
@@ -399,7 +418,11 @@ public class LayoutWindowController {
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        buttonBackgroundTextField.setText(file.toString());
+        if(file!=null){
+            buttonBackgroundTextField.setText(file.toString());
+        } else {
+            buttonBackgroundTextField.setText("");
+        }
     }
 
     // </editor-fold>

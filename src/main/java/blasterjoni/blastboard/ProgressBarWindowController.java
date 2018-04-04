@@ -36,7 +36,7 @@ public class ProgressBarWindowController {
         this.stage = stage;
         this.jobThread = new Thread(job);
         
-        titleLabel.setText(stage.getTitle().replace("BlastBoard - ", ""));
+        titleLabel.setText(stage.getTitle());
         
         stage.addEventHandler(WindowEvent.WINDOW_SHOWN, new EventHandler<WindowEvent>() {
             @Override

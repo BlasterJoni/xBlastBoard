@@ -88,7 +88,13 @@ public class ButtonWindowController {
         if(buttonID.equals("")){  
             ButtonProperties button = BBFiles.getLayoutProperties(layoutID).buttonDefault;
             
-            buttonIdTextField.setText(RandomStringUtils.randomAlphanumeric(10));
+            //Generating new ID if needed
+            List<String> buttons = BBFiles.getButtonList(layoutID);
+            String newID = RandomStringUtils.randomAlphanumeric(10);
+            while(buttons.contains(newID)){
+                newID = RandomStringUtils.randomAlphanumeric(10);
+            }
+            buttonIdTextField.setText(newID);
             
             //Set button fields
             buttonTextTextField.setText(button.text);
@@ -264,8 +270,11 @@ public class ButtonWindowController {
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Images", "*.png", "*.gif", "*.jpg", "*.jpeg", "*.bmp");
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
-        
-        buttonIconTextField.setText(file.toString());
+        if(file!=null){
+            buttonIconTextField.setText(file.toString());
+        } else {
+            buttonIconTextField.setText("");
+        }
     }
     
     public void buttonBackgroundPathButtonClicked() {
@@ -275,7 +284,11 @@ public class ButtonWindowController {
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        buttonBackgroundTextField.setText(file.toString());
+        if(file!=null){
+            buttonBackgroundTextField.setText(file.toString());
+        } else {
+            buttonBackgroundTextField.setText("");
+        }
     }
 
     public void buttonSoundPathButtonClicked(){
@@ -285,7 +298,11 @@ public class ButtonWindowController {
         fileChooser.getExtensionFilters().add(extFilter);
         File file = fileChooser.showOpenDialog(stage);
         
-        buttonSoundTextField.setText(file.toString());
+        if(file!=null){
+            buttonSoundTextField.setText(file.toString());
+        } else {
+            buttonSoundTextField.setText("");
+        }
     }
     // </editor-fold>
     

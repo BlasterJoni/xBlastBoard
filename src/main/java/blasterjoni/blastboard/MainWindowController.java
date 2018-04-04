@@ -610,6 +610,6 @@ public class MainWindowController{
     
     //Help
     public void test() throws IOException{
-        FFmpeg ff = new FFmpeg();
+        
     }
 }

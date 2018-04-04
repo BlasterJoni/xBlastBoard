@@ -20,12 +20,6 @@
    <top>
       <MenuBar maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" BorderPane.alignment="CENTER">
          <menus>
-            <Menu mnemonicParsing="false" text="File">
-               <items>
-                  <MenuItem mnemonicParsing="false" text="Import Layout" />
-                  <MenuItem mnemonicParsing="false" text="Import Button" />
-               </items>
-            </Menu>
             <Menu mnemonicParsing="false" text="Settings">
                <items>
                   <MenuItem mnemonicParsing="false" onAction="#audioSettingsMenuBarItemClicked" text="Audio" />
@@ -35,7 +29,7 @@
             <Menu mnemonicParsing="false" text="Help">
                <items>
                   <MenuItem disable="true" mnemonicParsing="false" text="Donate" />
-                  <MenuItem disable="true" mnemonicParsing="false" text="About" />
+                  <MenuItem mnemonicParsing="false" text="About" />
                   <MenuItem mnemonicParsing="false" onAction="#test" text="Test" />
                </items>
             </Menu>
