@@ -33,6 +33,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * FXML Controller class
@@ -103,6 +104,8 @@ public class LayoutWindowController {
         final BackgroundImage[] buttonImages = new BackgroundImage[1];
         
         if(layoutID.equals("")){  
+            layoutIdTextField.setText(RandomStringUtils.randomAlphanumeric(10));
+            
             layoutTextTextField.setText("Layout");
             layoutTextColorPicker.setValue(Color.web("#000000"));
             

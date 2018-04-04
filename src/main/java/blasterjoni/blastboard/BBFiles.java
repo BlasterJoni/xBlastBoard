@@ -6,6 +6,7 @@
 package blasterjoni.blastboard;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -44,7 +45,13 @@ import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+import net.lingala.zip4j.model.ZipParameters;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.tools.ant.taskdefs.Zip;
 import org.ini4j.Ini;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -57,6 +64,7 @@ import org.json.simple.parser.ParseException;
 public class BBFiles {
     static final String HOME = System.getProperty("user.home");
     static final String BLASTBOARDIR = HOME + "/.BlastBoard";
+    static final String TMP = BLASTBOARDIR + "/TMP";
     static final File LAYOUTSDIR = new File(BLASTBOARDIR + "/Layouts");
     static final File LAYOUTSFILE = new File(LAYOUTSDIR + "/layouts.json");
     static final File SETTINGSFILE = new File(BLASTBOARDIR + "/settings.ini");
@@ -462,121 +470,126 @@ public class BBFiles {
         
         if(!buttonSound.equals("")){
             buttonProperties.put("sound", true);
-            try {
-                if(FilenameUtils.getExtension(buttonSound).equals("mp3")){
-                    //java.nio.file.Files.copy(Paths.get(buttonSound), Paths.get(newButtonDir.getAbsolutePath() + "/sound"), StandardCopyOption.REPLACE_EXISTING);
-                    Stage stageACPB = new Stage();
-        
-                    FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/AFConvMovProgressBarWindow.fxml"));
-                    Parent root = loader.load();
-                    AFConvMovProgressBarWindowController controller = loader.getController();       
-                    Scene scene = new Scene(root);
-                    
-                    Runnable job = new Runnable() {
-                        @Override
-                        public void run() {
-                            File src = new File(buttonSound);
-                            File dst  = new File(newButtonDir.getAbsolutePath() + "/sound.mp3");
-                            try {
-                                InputStream in = new FileInputStream(src);
-                                OutputStream out = new FileOutputStream(dst);
-                                // Transfer bytes from in to out
-                                long expectedBytes = src.length(); // This is the number of bytes we expected to copy..
-                                long totalBytesCopied = 0; // This will track the total number of bytes we've copied
-                                byte[] buf = new byte[1024];
-                                int len = 0;
-                                while ((len = in.read(buf)) > 0) {
-                                    out.write(buf, 0, len);
-                                    totalBytesCopied += len;
-                                    double progress = (double)totalBytesCopied / (double)expectedBytes;
+            //Checking if buttonSound is still the same sound, if not then move/convert the new one
+            if(!buttonSound.equals(LAYOUTSDIR + "/" + layoutId + "/" + buttonID + "/sound.mp3")){
+                try {
+                    if(FilenameUtils.getExtension(buttonSound).equals("mp3")){
+                        //Files.copy(Paths.get(buttonSound), Paths.get(newButtonDir.getAbsolutePath() + "/sound"), StandardCopyOption.REPLACE_EXISTING);
+                        Stage stageACPB = new Stage();
+
+                        FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+                        Parent root = loader.load();
+                        ProgressBarWindowController controller = loader.getController();       
+                        Scene scene = new Scene(root);
+
+                        Runnable job = new Runnable() {
+                            @Override
+                            public void run() {
+                                File src = new File(buttonSound);
+                                File dst  = new File(newButtonDir.getAbsolutePath() + "/sound.mp3");
+                                try {
+                                    InputStream in = new FileInputStream(src);
+                                    OutputStream out = new FileOutputStream(dst);
+                                    // Transfer bytes from in to out
+                                    long expectedBytes = src.length(); // This is the number of bytes we expected to copy..
+                                    long totalBytesCopied = 0; // This will track the total number of bytes we've copied
+                                    byte[] buf = new byte[1024];
+                                    int len = 0;
+                                    while ((len = in.read(buf)) > 0) {
+                                        out.write(buf, 0, len);
+                                        totalBytesCopied += len;
+                                        double progress = (double)totalBytesCopied / (double)expectedBytes;
+                                        Platform.runLater(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                controller.setProgressValue(progress);
+                                            }
+                                        });
+                                        System.out.println("Moving audio file: " + (int)(progress*100) + "%");
+                                    }
                                     Platform.runLater(new Runnable() {
                                         @Override
                                         public void run() {
-                                            controller.setProgressValue(progress);
+                                            stageACPB.close();
                                         }
                                     });
+                                    in.close();
+                                    out.close();
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
                                 }
-                                Platform.runLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        stageACPB.close();
-                                    }
-                                });
-                                in.close();
-                                out.close();
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
                             }
-                        }
-                    };
-                    
-                    
-                    stageACPB.setScene(scene);
-                    stageACPB.setTitle("BlastBoard - Moving audio file");
-                    stageACPB.setMinWidth(550);
-                    stageACPB.setMinHeight(150);
-                    stageACPB.initModality(Modality.APPLICATION_MODAL);
-                    controller.init(stageACPB, job);
+                        };
 
-                    stageACPB.showAndWait();
-                } else {
-                    Stage stageACPB = new Stage();
-        
-                    FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/AFConvMovProgressBarWindow.fxml"));
-                    Parent root = loader.load();
-                    AFConvMovProgressBarWindowController controller = loader.getController();       
-                    Scene scene = new Scene(root);
 
-                    
-                    FFmpeg ffmpeg = new FFmpeg();
-                    FFprobe ffprobe = new FFprobe();
-                    
-                    FFmpegProbeResult in = ffprobe.probe(buttonSound);
-                    FFmpegBuilder builder = new FFmpegBuilder()
-                            .setInput(in)
-                            .overrideOutputFiles(true)
-                            .addOutput(newButtonDir.getAbsolutePath() + "/sound.mp3")
-                                .setFormat("mp3")
-                                .setAudioChannels(2)
-                                .setAudioSampleRate(44_100)
-                                .done();
+                        stageACPB.setScene(scene);
+                        stageACPB.setTitle("BlastBoard - Moving audio file");
+                        stageACPB.setMinWidth(550);
+                        stageACPB.setMinHeight(150);
+                        stageACPB.initModality(Modality.APPLICATION_MODAL);
+                        controller.init(stageACPB, job);
 
-                    FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
+                        stageACPB.showAndWait();
+                    } else {
+                        Stage stageACPB = new Stage();
 
-                    FFmpegJob job = executor.createJob(builder, new ProgressListener() {
-                        // Using the FFmpegProbeResult determine the duration of the input
-                        final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
+                        FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+                        Parent root = loader.load();
+                        ProgressBarWindowController controller = loader.getController();       
+                        Scene scene = new Scene(root);
 
-                        @Override
-                        public void progress(Progress progress) {
-                                double percentage = progress.out_time_ns / duration_ns;
-                                Platform.runLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        controller.setProgressValue(percentage);
-                                        if(progress.status.toString().equals("end")){
-                                            stageACPB.close(); 
+
+                        FFmpeg ffmpeg = new FFmpeg();
+                        FFprobe ffprobe = new FFprobe();
+
+                        FFmpegProbeResult in = ffprobe.probe(buttonSound);
+                        FFmpegBuilder builder = new FFmpegBuilder()
+                                .setInput(in)
+                                .overrideOutputFiles(true)
+                                .addOutput(newButtonDir.getAbsolutePath() + "/sound.mp3")
+                                    .setFormat("mp3")
+                                    .setAudioChannels(2)
+                                    .setAudioSampleRate(44_100)
+                                    .done();
+
+                        FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
+
+                        FFmpegJob job = executor.createJob(builder, new ProgressListener() {
+                            // Using the FFmpegProbeResult determine the duration of the input
+                            final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
+
+                            @Override
+                            public void progress(Progress progress) {
+                                    double percentage = progress.out_time_ns / duration_ns;
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(percentage);
+                                            if(progress.status.toString().equals("end")){
+                                                stageACPB.close(); 
+                                            }
                                         }
-                                    }
-                                });
-                        }
-                    });
-                    
+                                    });
+                                    System.out.println("Converting audio file: " + (int)(percentage*100) + "%");
+                            }
+                        });
 
-                    stageACPB.setScene(scene);
-                    stageACPB.setTitle("BlastBoard - Converting audio file");
-                    stageACPB.setMinWidth(550);
-                    stageACPB.setMinHeight(150);
-                    stageACPB.initModality(Modality.APPLICATION_MODAL);
-                    controller.init(stageACPB, job);
 
-                    stageACPB.showAndWait();
+                        stageACPB.setScene(scene);
+                        stageACPB.setTitle("BlastBoard - Converting audio file");
+                        stageACPB.setMinWidth(550);
+                        stageACPB.setMinHeight(150);
+                        stageACPB.initModality(Modality.APPLICATION_MODAL);
+                        controller.init(stageACPB, job);
+
+                        stageACPB.showAndWait();
+                    }
+                } catch (IOException IOE) {
+                    IOE.printStackTrace();
+                    System.out.println("FFmpeg not found");
+                    buttonProperties.put("sound", false);
                 }
-            } catch (IOException IOE) {
-                IOE.printStackTrace();
-                System.out.println("FFmpeg not found");
-                buttonProperties.put("sound", false);
-            }
+            }   
         } else {
             buttonProperties.put("sound", false);
         }
@@ -673,5 +686,227 @@ public class BBFiles {
         button.soundPath = workingButtonDIR + "/sound.mp3";
         
         return button;
+    }
+    
+    //Importing and exporting
+    public static void exportLayout(String layoutID, File out){
+        try {
+            ZipFile zip = new ZipFile(out);
+            zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID), new ZipParameters());
+        } catch (ZipException ex) {
+            ex.printStackTrace();
+        }
+    } 
+    
+    public static void importLayout(File in){
+        try {
+            Stage stageACPB = new Stage();
+            
+            FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+            Parent root = loader.load();
+            ProgressBarWindowController controller = loader.getController();            
+            Scene scene = new Scene(root);
+            
+            Runnable job = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ZipFile zip = new ZipFile(in);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                while(true){
+                                    int percent = zip.getProgressMonitor().getPercentDone();
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(percent/100.00f);
+                                        }
+                                    });
+                                    if(percent >= 99){
+                                        break;
+                                    }
+                                    System.out.println("Importing layout : " + percent + "%");
+                                }
+                            }
+                        }).start();
+                        zip.extractAll(TMP);
+                        
+                        File[] directories = new File(TMP).listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File file) {
+                                return file.isDirectory();
+                            }
+                        });
+                        
+                        String folderName = directories[0].getName();
+                        if (new File(LAYOUTSDIR + "/" + folderName).exists()) {
+                            folderName = folderName + RandomStringUtils.randomAlphanumeric(10);
+                            directories[0].renameTo(new File(TMP + "/" + folderName));
+                        }
+                        
+                        try {
+                            Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + folderName));
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                            //Delete if failed to move
+                            try {
+                                File fileToDelete = new File(TMP + "/" + folderName);
+                                Files.walkFileTree(fileToDelete.toPath(), new SimpleFileVisitor<Path>() {
+                                    @Override
+                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                        Files.delete(file);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                    
+                                    @Override
+                                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                        Files.delete(dir);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                });
+                            } catch (Exception ex1) {
+                                ex1.printStackTrace();
+                            }
+                        }
+                        
+                        List<String> layoutList = BBFiles.getLayoutList();
+                        layoutList.add(folderName);
+                        BBFiles.saveLayoutList(layoutList);
+                        
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                stageACPB.close();
+                            }
+                        });
+                    } catch (ZipException ex) {
+                        ex.printStackTrace();
+                    }                    
+                }
+            };
+            
+            stageACPB.setScene(scene);
+            stageACPB.setTitle("BlastBoard - Importing Layout");
+            stageACPB.setMinWidth(550);
+            stageACPB.setMinHeight(150);
+            stageACPB.initModality(Modality.APPLICATION_MODAL);
+            controller.init(stageACPB, job);
+            
+            stageACPB.showAndWait();
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        }
+    }
+    
+    
+    public static void exportButton(String layoutID, String buttonID, File out){
+        try {
+            ZipFile zip = new ZipFile(out);
+            zip.addFolder(new File(LAYOUTSDIR+"/"+layoutID+"/"+buttonID), new ZipParameters());
+        } catch (ZipException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    public static void importButton(String layoutID, File in){
+        try {
+            Stage stageACPB = new Stage();
+            
+            FXMLLoader loader = new FXMLLoader(BBFiles.class.getResource("/fxml/ProgressBarWindow.fxml"));
+            Parent root = loader.load();
+            ProgressBarWindowController controller = loader.getController();            
+            Scene scene = new Scene(root);
+            
+            Runnable job = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ZipFile zip = new ZipFile(in);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                while(true){
+                                    int percent = zip.getProgressMonitor().getPercentDone();
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            controller.setProgressValue(percent/100.00f);
+                                        }
+                                    });
+                                    if(percent >= 99){
+                                        break;
+                                    }
+                                    System.out.println("Importing button : " + percent + "%");
+                                }
+                            }
+                        }).start();
+                        zip.extractAll(TMP);
+                        
+                        File[] directories = new File(TMP).listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File file) {
+                                return file.isDirectory();
+                            }
+                        });
+                        
+                        String folderName = directories[0].getName();
+                        if (new File(LAYOUTSDIR + "/" + layoutID + "/" + folderName).exists()) {
+                            folderName = folderName + RandomStringUtils.randomAlphanumeric(10);
+                            directories[0].renameTo(new File(TMP + "/" + folderName));
+                        }
+                        
+                        try {
+                            Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + layoutID + "/" + folderName));
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                            //Delete if failed to move
+                            try {
+                                File fileToDelete = new File(TMP + "/" + folderName);
+                                Files.walkFileTree(fileToDelete.toPath(), new SimpleFileVisitor<Path>() {
+                                    @Override
+                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                        Files.delete(file);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                    
+                                    @Override
+                                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                        Files.delete(dir);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                });
+                            } catch (Exception ex1) {
+                                ex1.printStackTrace();
+                            }
+                        }
+                        
+                        List<String> buttonList = BBFiles.getButtonList(layoutID);
+                        buttonList.add(folderName);
+                        BBFiles.saveButtonList(layoutID, buttonList);
+                        
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                stageACPB.close();
+                            }
+                        });
+                    } catch (ZipException ex) {
+                        ex.printStackTrace();
+                    }                    
+                }
+            };
+            
+            stageACPB.setScene(scene);
+            stageACPB.setTitle("BlastBoard - Importing Button");
+            stageACPB.setMinWidth(550);
+            stageACPB.setMinHeight(150);
+            stageACPB.initModality(Modality.APPLICATION_MODAL);
+            controller.init(stageACPB, job);
+            
+            stageACPB.showAndWait();
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        }
     }
 }

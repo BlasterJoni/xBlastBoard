@@ -22,6 +22,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.RandomStringUtils;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -87,7 +88,7 @@ public class ButtonWindowController {
         if(buttonID.equals("")){  
             ButtonProperties button = BBFiles.getLayoutProperties(layoutID).buttonDefault;
             
-            buttonIdTextField.setText(buttonID);
+            buttonIdTextField.setText(RandomStringUtils.randomAlphanumeric(10));
             
             //Set button fields
             buttonTextTextField.setText(button.text);
@@ -315,7 +316,7 @@ public class ButtonWindowController {
             stage.close();
         }else{
             //We save to old ID dir first, and then if new ID move the folder
-            
+            //TODO: Got to check if sound has changed, if not
             BBFiles.saveButton(
                     layoutID,
                     buttonID,

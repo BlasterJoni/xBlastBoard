@@ -20,7 +20,7 @@ import net.bramp.ffmpeg.job.FFmpegJob;
  *
  * @author João Arvana
  */
-public class AFConvMovProgressBarWindowController {
+public class ProgressBarWindowController {
 
     @FXML
     private ProgressBar progressBar;

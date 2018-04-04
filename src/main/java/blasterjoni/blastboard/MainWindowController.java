@@ -38,6 +38,7 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.FlowPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -135,11 +136,21 @@ public class MainWindowController{
                 ex.printStackTrace();
             }
         });
+        MenuItem importButton = new MenuItem("Import Button");
+        importButton.setOnAction((ActionEvent e) -> {
+            try {
+                importButtonContextMenuItemClicked();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
         MenuItem editButton = new MenuItem("Edit Button");
         editButton.setDisable(true);
         MenuItem removeButton = new MenuItem("Remove Button");
         removeButton.setDisable(true);
-        buttonContextMenu.getItems().addAll(addButton, new SeparatorMenuItem(), editButton, removeButton);
+        MenuItem exportButton = new MenuItem("Export Button");
+        exportButton.setDisable(true);
+        buttonContextMenu.getItems().addAll(addButton, importButton, new SeparatorMenuItem(), editButton, exportButton, removeButton);
 
         buttonsFlowPane.setOnContextMenuRequested(e -> {
             if (buttonContextMenu.isShowing()) {
@@ -220,7 +231,7 @@ public class MainWindowController{
         layoutComboBox.setButtonCell(cellFactory.call(null));
         
         layoutComboBox.setOnContextMenuRequested(e->{
-            MenuItem removeItem = layoutComboBox.getContextMenu().getItems().get(3);
+            MenuItem removeItem = layoutComboBox.getContextMenu().getItems().get(5);
             if(layoutComboBox.getItems().size() == 1){
                 removeItem.setDisable(true);
             }else{
@@ -296,10 +307,26 @@ public class MainWindowController{
                     ex.printStackTrace();
                 }
             });
+            MenuItem importButton = new MenuItem("Import Button");
+            importButton.setOnAction((ActionEvent e) -> {
+                try {
+                    importButtonContextMenuItemClicked();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
             MenuItem editButton = new MenuItem("Edit Button");
             editButton.setOnAction(e->{
                 try {
                     editButtonContexMenuItemClicked(bId);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            MenuItem exportButton = new MenuItem("Export Button");
+            exportButton.setOnAction(e->{
+                try {
+                    exportButtonContexMenuItemClicked(bId);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -312,7 +339,7 @@ public class MainWindowController{
                     ex.printStackTrace();
                 }
             });
-            buttonContextMenu.getItems().addAll(addButton, new SeparatorMenuItem(), editButton, removeButton);
+            buttonContextMenu.getItems().addAll(addButton, importButton, new SeparatorMenuItem(), editButton, exportButton, removeButton);
             
             
             //Setting button events
@@ -443,6 +470,28 @@ public class MainWindowController{
         BBFiles.deleteLayout(layoutID);
     }
     
+    public void exportLayoutContextMenuItemClicked(){
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("xBlastBoard Layout Files", "*.xbbl");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showSaveDialog(stage);
+        if(file != null){
+            BBFiles.exportLayout((String) layoutComboBox.getValue(), file);
+        }
+    }
+    
+    public void importLayoutContextMenuItemClicked(){
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("xBlastBoard Layout Files", "*.xbbl");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showOpenDialog(stage);
+        if(file != null){
+            BBFiles.importLayout(file);
+        }
+        updateLayouts();
+        layoutComboBox.setValue(layoutComboBox.getItems().get(layoutComboBox.getItems().size() - 1));  
+    }
+    
     //Button context menu
     public void addButtonContexMenuItemClicked() throws Exception{
         Stage stageButton = new Stage();
@@ -498,7 +547,29 @@ public class MainWindowController{
         BBFiles.deleteButton((String) layoutComboBox.getValue(), buttonID);
     }
     
+    public void exportButtonContexMenuItemClicked(String buttonID){
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("xBlastBoard Button Files", "*.xbbb");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showSaveDialog(stage);
+        if(file != null){
+            BBFiles.exportButton((String) layoutComboBox.getValue(), buttonID, file);
+        }
+    }
+    
+    public void importButtonContextMenuItemClicked(){
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("xBlastBoard Button Files", "*.xbbb");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showOpenDialog(stage);
+        if(file != null){
+            BBFiles.importButton((String) layoutComboBox.getValue(), file);
+        }
+        updateButtons();
+    }
+    
     //Menu bar
+    //Settings
     public void audioSettingsMenuBarItemClicked() throws Exception{
         openSettings(0);
     }
@@ -534,6 +605,10 @@ public class MainWindowController{
         }
     }
     
+    //File
+    
+    
+    //Help
     public void test() throws IOException{
         FFmpeg ff = new FFmpeg();
     }

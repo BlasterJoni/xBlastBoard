@@ -22,10 +22,8 @@
          <menus>
             <Menu mnemonicParsing="false" text="File">
                <items>
-                  <MenuItem disable="true" mnemonicParsing="false" text="Import layout" />
-                  <MenuItem disable="true" mnemonicParsing="false" text="Export layout" />
-                  <MenuItem disable="true" mnemonicParsing="false" text="Import Button" />
-                  <MenuItem disable="true" mnemonicParsing="false" text="Export Button" />
+                  <MenuItem mnemonicParsing="false" text="Import Layout" />
+                  <MenuItem mnemonicParsing="false" text="Import Button" />
                </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Settings">
@@ -97,8 +95,10 @@
                         <ContextMenu>
                           <items>
                             <MenuItem mnemonicParsing="false" onAction="#addLayoutContexMenuItemClicked" text="Add Layout" />
+                              <MenuItem mnemonicParsing="false" onAction="#importLayoutContextMenuItemClicked" text="Import Layout" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#editLayoutContexMenuItemClicked" text="Edit Layout" />
+                              <MenuItem mnemonicParsing="false" onAction="#exportLayoutContextMenuItemClicked" text="Export Layout" />
                               <MenuItem mnemonicParsing="false" onAction="#removeLayoutContexMenuItemClicked" text="Remove Layout" />
                           </items>
                         </ContextMenu>
