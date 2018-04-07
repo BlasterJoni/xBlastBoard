@@ -124,7 +124,6 @@ public class LayoutWindowController {
         }
         else{
             editing = true;
-            okButton.setDisable(false);
             LayoutProperties layout = BBFiles.getLayoutProperties(layoutID);
             
             layoutIdTextField.setText(layoutID);

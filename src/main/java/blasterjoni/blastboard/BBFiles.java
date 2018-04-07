@@ -33,6 +33,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -475,7 +476,7 @@ public class BBFiles {
             //Checking if buttonSound is still the same sound, if not then move/convert the new one
             //This is needed here but not in the other files because the other files use Files.copy, wich probably alredy checks for this
             //or does some other kind of fuckery, while in the sound file we copying it manualy bit by bit in order to have a progress bar.
-            if(!buttonSound.equals(LAYOUTSDIR + "/" + layoutId + "/" + buttonID + "/sound.mp3")){
+            if(!buttonSound.equals(LAYOUTSDIR + "/" + layoutId + "/" + buttonID + "/sound")){
                 try {
                     Stage stageACPB = new Stage();
 
@@ -493,7 +494,7 @@ public class BBFiles {
                             @Override
                             public void run() {
                                 File src = new File(buttonSound);
-                                File dst  = new File(newButtonDir.getAbsolutePath() + "/sound.mp3");
+                                File dst  = new File(newButtonDir.getAbsolutePath() + "/sound");
                                 try {
                                     InputStream in = new FileInputStream(src);
                                     OutputStream out = new FileOutputStream(dst);
@@ -528,7 +529,7 @@ public class BBFiles {
                             }
                         };
 
-                        stageACPB.setTitle("Moving audio file");
+                        controller.setCurrentAction("Moving audio file");
                     } else {
                         FFmpeg ffmpeg = new FFmpeg();
                         FFprobe ffprobe = new FFprobe();
@@ -537,7 +538,7 @@ public class BBFiles {
                         FFmpegBuilder builder = new FFmpegBuilder()
                                 .setInput(in)
                                 .overrideOutputFiles(true)
-                                .addOutput(newButtonDir.getAbsolutePath() + "/sound.mp3")
+                                .addOutput(newButtonDir.getAbsolutePath() + "/sound")
                                     .setFormat("mp3")
                                     .setAudioChannels(2)
                                     .setAudioSampleRate(44_100)
@@ -565,11 +566,13 @@ public class BBFiles {
                             }
                         });
                         
-                        stageACPB.setTitle("Converting audio file");
+                        controller.setCurrentAction("Converting audio file");
                     }
+                    stageACPB.setTitle("Saving button");
                     stageACPB.setScene(scene);
                     stageACPB.setMinWidth(550);
                     stageACPB.setMinHeight(150);
+                    stageACPB.getIcons().add(new Image(BBFiles.class.getResourceAsStream("/images/icon.png")));
                     stageACPB.initModality(Modality.APPLICATION_MODAL);
                     controller.init(stageACPB, job);
 
@@ -673,7 +676,7 @@ public class BBFiles {
             button.backgroundColor = Color.WHITE;
         }
         button.hasSound = (Boolean) buttonJSON.getOrDefault("sound", false);
-        button.soundPath = workingButtonDIR + "/sound.mp3";
+        button.soundPath = workingButtonDIR + "/sound";
         
         return button;
     }
@@ -692,6 +695,10 @@ public class BBFiles {
                 @Override
                 public void run() {
                     try {
+                        if(out.exists())
+                        {
+                            out.delete();
+                        }
                         ZipFile zip = new ZipFile(out);
                         new Thread(new Runnable() {
                             @Override
@@ -734,11 +741,13 @@ public class BBFiles {
                     }                    
                 }
             };
+            controller.setCurrentAction("Exporting layout");
             
             stageACPB.setScene(scene);
-            stageACPB.setTitle("Exporting Button");
+            stageACPB.setTitle("Exporting Layout");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
+            stageACPB.getIcons().add(new Image(BBFiles.class.getResourceAsStream("/images/icon.png")));
             stageACPB.initModality(Modality.APPLICATION_MODAL);
             controller.init(stageACPB, job);
             
@@ -850,11 +859,13 @@ public class BBFiles {
                     }                    
                 }
             };
+            controller.setCurrentAction("Importing layout");
             
             stageACPB.setScene(scene);
             stageACPB.setTitle("Importing Layout");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
+            stageACPB.getIcons().add(new Image(BBFiles.class.getResourceAsStream("/images/icon.png")));
             stageACPB.initModality(Modality.APPLICATION_MODAL);
             controller.init(stageACPB, job);
             
@@ -879,6 +890,10 @@ public class BBFiles {
                 @Override
                 public void run() {
                     try {
+                        if(out.exists())
+                        {
+                            out.delete();
+                        }
                         ZipFile zip = new ZipFile(out);
                         new Thread(new Runnable() {
                             @Override
@@ -921,11 +936,13 @@ public class BBFiles {
                     }                    
                 }
             };
+            controller.setCurrentAction("Exporting button");
             
             stageACPB.setScene(scene);
             stageACPB.setTitle("Exporting Button");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
+            stageACPB.getIcons().add(new Image(BBFiles.class.getResourceAsStream("/images/icon.png")));
             stageACPB.initModality(Modality.APPLICATION_MODAL);
             controller.init(stageACPB, job);
             
@@ -1037,11 +1054,13 @@ public class BBFiles {
                     }                    
                 }
             };
+            controller.setCurrentAction("Importing button");
             
             stageACPB.setScene(scene);
             stageACPB.setTitle("Importing Button");
             stageACPB.setMinWidth(550);
             stageACPB.setMinHeight(150);
+            stageACPB.getIcons().add(new Image(BBFiles.class.getResourceAsStream("/images/icon.png")));
             stageACPB.initModality(Modality.APPLICATION_MODAL);
             controller.init(stageACPB, job);
             

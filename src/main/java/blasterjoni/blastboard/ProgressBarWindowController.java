@@ -30,6 +30,7 @@ public class ProgressBarWindowController {
     private Label titleLabel;
     
     private Thread jobThread;
+    private String currentAction;
     
     public Stage stage;
     public void init(Stage stage, Runnable job) {
@@ -58,7 +59,11 @@ public class ProgressBarWindowController {
     public void setProgressValue(double value){
         progressBar.setProgress(value);
         int percentage = (int) (value * 100);
-        progressLabel.setText(Integer.toString(percentage)+"%");
+        progressLabel.setText(currentAction + ": " + Integer.toString(percentage)+"%");
+    }
+    
+    public void setCurrentAction(String action){
+        currentAction = action;
     }
     
     public void close(){

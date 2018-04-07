@@ -19,7 +19,7 @@
    <bottom>
       <ButtonBar prefHeight="25.0" BorderPane.alignment="CENTER">
         <buttons>
-          <Button fx:id="okButton" disable="true" mnemonicParsing="false" onAction="#okButtonClicked" text="Ok" />
+          <Button fx:id="okButton" mnemonicParsing="false" onAction="#okButtonClicked" text="Ok" />
             <Button mnemonicParsing="false" onAction="#cancelButtonClicked" text="Cancel" />
         </buttons>
          <BorderPane.margin>

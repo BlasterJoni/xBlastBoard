@@ -135,7 +135,6 @@ public class ButtonWindowController {
         }
         else{
             editing = true;
-            okButton.setDisable(false);
             ButtonProperties button = BBFiles.getButtonProperties(layoutID, buttonID);
             
             buttonIdTextField.setText(buttonID);

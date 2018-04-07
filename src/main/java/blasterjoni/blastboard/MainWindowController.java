@@ -420,6 +420,7 @@ public class MainWindowController{
         stageLayout.setTitle("BlastBoard - Layout");
         stageLayout.setMinWidth(650);
         stageLayout.setMinHeight(450);
+        stageLayout.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
         stageLayout.initModality(Modality.APPLICATION_MODAL);
         controller.init(this, stageLayout, "");
         
@@ -443,6 +444,7 @@ public class MainWindowController{
         stageLayout.setTitle("BlastBoard - Layout");
         stageLayout.setMinWidth(650);
         stageLayout.setMinHeight(450);
+        stageLayout.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
         stageLayout.initModality(Modality.APPLICATION_MODAL);
         controller.init(this, stageLayout, (String) layoutComboBox.getValue());
         
@@ -502,9 +504,10 @@ public class MainWindowController{
         Scene scene = new Scene(root);
         
         stageButton.setScene(scene);
-        stageButton.setTitle("BlastBoard - Layout");
+        stageButton.setTitle("BlastBoard - Button");
         stageButton.setMinWidth(650);
         stageButton.setMinHeight(295);
+        stageButton.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
         stageButton.initModality(Modality.APPLICATION_MODAL);
         controller.init(this, stageButton, (String) layoutComboBox.getValue(), "");
         
@@ -524,9 +527,10 @@ public class MainWindowController{
         Scene scene = new Scene(root);
         
         stageButton.setScene(scene);
-        stageButton.setTitle("BlastBoard - Layout");
+        stageButton.setTitle("BlastBoard - Button");
         stageButton.setMinWidth(650);
         stageButton.setMinHeight(295);
+        stageButton.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
         stageButton.initModality(Modality.APPLICATION_MODAL);
         controller.init(this, stageButton, (String) layoutComboBox.getValue(), buttonID);
         
@@ -590,6 +594,7 @@ public class MainWindowController{
         stageSettings.setTitle("BlastBoard - Settings");
         stageSettings.setMinWidth(550);
         stageSettings.setMinHeight(250);
+        stageSettings.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
         stageSettings.initModality(Modality.APPLICATION_MODAL);
         controller.init(this, stageSettings, tabIndex);
         
