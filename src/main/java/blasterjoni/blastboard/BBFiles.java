@@ -199,6 +199,12 @@ public class BBFiles {
             }
         } else {
             layoutProperties.put("icon", false);
+            
+            //Delete if it exists from previous edits of the layout
+            File iconFile = new File(newLayoutDir + "/icon");
+            if (iconFile.exists()){
+                iconFile.delete();
+            }
         }
 
         if(!layoutBackground.equals("")){
@@ -211,6 +217,12 @@ public class BBFiles {
             }
         } else {
             layoutProperties.put("backgroundImage", false);
+            
+            //Delete if it exists from previous edits of the layout
+            File backgroundFile = new File(newLayoutDir + "/background");
+            if (backgroundFile.exists()){
+                backgroundFile.delete();
+            }
         }
         layoutProperties.put("backgroundColor", layoutBackgroundColor.toString());
 
@@ -231,6 +243,12 @@ public class BBFiles {
             }
         } else {
             defaultButtonProperties.put("icon", false);
+            
+            //Delete if it exists from previous edits of the layout
+            File bIconFile = new File(newLayoutDir + "/buttonIcon");
+            if (bIconFile.exists()){
+                bIconFile.delete();
+            }
         }
 
         if(!buttonBackground.equals("")){
@@ -243,6 +261,12 @@ public class BBFiles {
             }
         } else {
             defaultButtonProperties.put("backgroundImage", false);
+            
+            //Delete if it exists from previous edits of the layout
+            File bBackgroundFile = new File(newLayoutDir + "/buttonBackground");
+            if (bBackgroundFile.exists()){
+                bBackgroundFile.delete();
+            }
         }
         defaultButtonProperties.put("backgroundColor", buttonBackgroundColor.toString());
 
@@ -456,6 +480,12 @@ public class BBFiles {
             }
         } else {
             buttonProperties.put("icon", false);
+            
+            //Delete if it exists from previous edits of the button
+            File iconFile = new File(newButtonDir + "/icon");
+            if (iconFile.exists()){
+                iconFile.delete();
+            }
         }
 
         if(!buttonBackground.equals("")){
@@ -468,6 +498,12 @@ public class BBFiles {
             }
         } else {
             buttonProperties.put("backgroundImage", false);
+            
+            //Delete if it exists from previous edits of the button
+            File backgroundFile = new File(newButtonDir + "/background");
+            if (backgroundFile.exists()){
+                backgroundFile.delete();
+            }
         }
         buttonProperties.put("backgroundColor", buttonBackgroundColor.toString());
         
@@ -585,6 +621,12 @@ public class BBFiles {
             }   
         } else {
             buttonProperties.put("sound", false);
+            
+            //Delete if it exists from previous edits of the button
+            File soundFile = new File(newButtonDir + "/sound");
+            if (soundFile.exists()){
+                soundFile.delete();
+            }
         }
         
         // Write json to file
@@ -879,7 +921,6 @@ public class BBFiles {
     }
     
     
-    //TODO: export progress bar
     public static void exportButton(String layoutID, String buttonID, File out){   
         try {
             Stage stageACPB = new Stage();
