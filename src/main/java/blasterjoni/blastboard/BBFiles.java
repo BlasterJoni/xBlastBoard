@@ -812,51 +812,54 @@ public class BBFiles {
                             }
                         });
                         
-                        //Generating new ID if needed
                         String folderName = directories[0].getName();
-                        while(new File(LAYOUTSDIR + "/" + folderName).exists()){
-                            folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
-                        }
-                        directories[0].renameTo(new File(TMP + "/" + folderName));
-                        
-                        try {
+                        if(new File(TMP + "/" + folderName + "/layout.json").exists()){
+                            //Generating new ID if needed
+                            while(new File(LAYOUTSDIR + "/" + folderName).exists()){
+                                folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
+                            }
+                            directories[0].renameTo(new File(TMP + "/" + folderName));
+
                             Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + folderName));
-                            
+
                             List<String> layoutList = BBFiles.getLayoutList();
                             layoutList.add(folderName);
                             BBFiles.saveLayoutList(layoutList);
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                            //Delete if failed to move
-                            try {
-                                File fileToDelete = new File(TMP + "/" + folderName);
-                                Files.walkFileTree(fileToDelete.toPath(), new SimpleFileVisitor<Path>() {
-                                    @Override
-                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                        Files.delete(file);
-                                        return FileVisitResult.CONTINUE;
-                                    }
-                                    
-                                    @Override
-                                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        } else {
+                            throw new Exception("Not a layout file");
+                        } 
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        //Delete if failed to move
+                        try {
+                            File folderToClear = new File(TMP);
+                            Files.walkFileTree(folderToClear.toPath(), new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    Files.delete(file);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                
+                                @Override
+                                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                    if (!dir.toAbsolutePath().equals(folderToClear.toPath().toAbsolutePath())){
                                         Files.delete(dir);
-                                        return FileVisitResult.CONTINUE;
                                     }
-                                });
-                            } catch (Exception ex1) {
-                                ex1.printStackTrace();
-                            }
+                                        return FileVisitResult.CONTINUE;
+                                }
+                            });
+                        } catch (Exception ex1) {
+                            ex1.printStackTrace();
                         }
-                        
-                        Platform.runLater(new Runnable() {
+                    } 
+                    
+                    Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
                                 stageACPB.close();
                             }
                         });
-                    } catch (ZipException ex) {
-                        ex.printStackTrace();
-                    }                    
+                    
                 }
             };
             controller.setCurrentAction("Importing layout");
@@ -964,6 +967,8 @@ public class BBFiles {
             Runnable job = new Runnable() {
                 @Override
                 public void run() {
+                    String folderName;
+                    
                     try {
                         ZipFile zip = new ZipFile(in);
                         new Thread(new Runnable() {
@@ -1007,51 +1012,52 @@ public class BBFiles {
                             }
                         });
                         
-                        //Generating new ID if needed
-                        String folderName = directories[0].getName();
-                        while(new File(LAYOUTSDIR + "/" + layoutID + "/" + folderName).exists()){
-                            folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
-                        }
-                        directories[0].renameTo(new File(TMP + "/" + folderName));
-                        
-                        try {
+                        folderName = directories[0].getName();
+                        if(new File(TMP + "/" + folderName + "/button.json").exists()){
+                            //Generating new ID if needed
+                            while(new File(LAYOUTSDIR + "/" + layoutID + "/" + folderName).exists()){
+                                folderName = directories[0].getName() + RandomStringUtils.randomAlphanumeric(10);
+                            }
+                            directories[0].renameTo(new File(TMP + "/" + folderName));
+                            
                             Files.move(Paths.get(TMP + "/" + folderName), Paths.get(LAYOUTSDIR + "/" + layoutID + "/" + folderName));
-                        
+
                             List<String> buttonList = BBFiles.getButtonList(layoutID);
                             buttonList.add(folderName);
                             BBFiles.saveButtonList(layoutID, buttonList);
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                            //Delete if failed to move
-                            try {
-                                File fileToDelete = new File(TMP + "/" + folderName);
-                                Files.walkFileTree(fileToDelete.toPath(), new SimpleFileVisitor<Path>() {
-                                    @Override
-                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                        Files.delete(file);
-                                        return FileVisitResult.CONTINUE;
-                                    }
-                                    
-                                    @Override
-                                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                                        Files.delete(dir);
-                                        return FileVisitResult.CONTINUE;
-                                    }
-                                });
-                            } catch (Exception ex1) {
-                                ex1.printStackTrace();
-                            }
+                        } else {
+                            throw new Exception("Not a button file");
                         }
-                        
-                        Platform.runLater(new Runnable() {
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        //Delete if failed to move
+                        try {
+                            File folderToClear = new File(TMP);
+                            Files.walkFileTree(folderToClear.toPath(), new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    Files.delete(file);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                
+                                @Override
+                                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                    if (!dir.toAbsolutePath().equals(folderToClear.toPath().toAbsolutePath())){
+                                        Files.delete(dir);
+                                    }
+                                        return FileVisitResult.CONTINUE;
+                                }
+                            });
+                        } catch (Exception ex1) {
+                            ex1.printStackTrace();
+                        }
+                    } 
+                    Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
                                 stageACPB.close();
                             }
                         });
-                    } catch (ZipException ex) {
-                        ex.printStackTrace();
-                    }                    
                 }
             };
             controller.setCurrentAction("Importing button");

@@ -14,6 +14,8 @@ import javafx.stage.WindowEvent;
 
 public class Main extends Application {
 
+    MainWindowController controller;
+    
     public static void main(String[] args){
         // Before anything check if files exist, if not create them.
         String home = System.getProperty("user.home");
@@ -31,6 +33,15 @@ public class Main extends Application {
             BBFiles.saveLayoutList(layoutList);
         }
         // Everywhere forward these files are assumed to exist.
+        
+        //TODO: Opening new files on startup
+        if (args.length > 0) {
+            File f = new File(args[0]);
+            if (f.isFile()) {
+                //Load;
+            }
+        }
+        
         Application.launch(args);
     }
 
@@ -38,7 +49,7 @@ public class Main extends Application {
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
         Parent root = loader.load();
-        final MainWindowController controller = loader.getController();
+        controller = loader.getController();
 
         Scene scene = new Scene(root);
         scene.getStylesheets().add(getClass().getResource("/styles/Styles.css").toExternalForm());
