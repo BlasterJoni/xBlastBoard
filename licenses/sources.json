@@ -1,0 +1,37 @@
+[
+    {
+        "name": "ffmpeg",
+        "uri": "./licenses/ffmpeg/LICENSE.txt",
+        "homepage": "https://ffmpeg.org/"
+    },
+    {
+        "name": "ffmpeg-cli-wrapper",
+        "uri": "./licenses/ffmpeg-cli-wrapper/LICENSE.txt",
+        "homepage": "https://github.com/bramp/ffmpeg-cli-wrapper"
+    },
+    {
+        "name": "ini4j",
+        "uri": "./licenses/ini4j/LICENSE.txt",
+        "homepage": "http://ini4j.sourceforge.net/"
+    },
+    {
+        "name": "json-simple",
+        "uri": "./licenses/json-simple/LICENSE.txt",
+        "homepage": "https://code.google.com/archive/p/json-simple/"
+    },
+    {
+        "name": "JUnique",
+        "uri": "./licenses/JUnique/LICENSE.txt",
+        "homepage": "http://www.sauronsoftware.it/projects/junique/index.php"
+    },
+    {
+        "name": "mp3spi",
+        "uri": "./licenses/mp3spi/LICENSE.txt",
+        "homepage": "http://www.javazoom.net/mp3spi/mp3spi.html"
+    },
+    {
+        "name": "Zip4j",
+        "uri": "./licenses/Zip4j/LICENSE.txt",
+        "homepage": "http://www.lingala.net/zip4j/index.php"
+    }
+]

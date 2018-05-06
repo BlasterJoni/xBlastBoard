@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>Licenses</title>
+
+    <style>
+        .product{
+            padding: 5px;
+            background-color: lightskyblue;
+            color: white;
+            margin: 15px 0px;
+        }
+
+        .product a {
+            text-align: left;
+            float: right;
+            margin: 0px 5px;
+        }
+
+        .code{
+            background-color: lightcyan;
+            color: black;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+{% for a in sources %}
+    <div class="product">
+        <span class="title">{{a.name}}</span>
+        <a href="{{a.homepage}}">Homepage</a>
+        <a href="#" onclick="toggle('{{a.name}}')">Show</a>
+        <div id="{{a.name}}" class="code" style="display:none">
+            <pre>
+{{a.license}}
+            </pre>
+        </div>
+    </div>
+{% endfor %}
+    <script>
+        function toggle(id){
+            var block = document.getElementById(id);
+            if(block.style.display == "none"){
+                block.style.display = "block";
+            } else {
+                block.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
